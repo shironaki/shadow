@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <!--
 ═══════════════════════════════════════════════════════════════════
- ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.7 «Врата»
+ ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.8 «Клинки Бездны»
  ─────────────────────────────────────────────────────────────────
- v0.1–v0.6 — см. предыдущие паспорта.
- v0.7 — ТЕКУЩАЯ. СТРУКТУРА МИРА ПЕРЕДЕЛАНА:
+ v0.8 — ТЕКУЩАЯ. ВОССТАНОВЛЕН БОЙ ВРАГОВ (главный фикс:
+   мобы/маги/палачи/рыцари не могли атаковать — ветка
+   инициации атаки отсутствовала), болты магов, слэм
+   палача, leash-агро, ввод при открытых окнах, миникарта,
+   NaN-защита сейвов, автосейв при сворачивании, iOS-звук.
+ v0.7 — СТРУКТУРА МИРА ПЕРЕДЕЛАНА (см. ниже):
    • Мир (хаб, безопасная зона) с 5 пьедесталами призыва врат
    • Врата открываются по таймеру в случайном месте, живут 60с
    • Ранг врат E/D/C/B/A/S = сложность (масштаб, волны, босс),
@@ -27,6 +31,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05040f">
 <title>Shadow Ascension — Врата</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a855f7' d='M5 21v-8a7 7 0 0 1 14 0v8h-3.4v-8a3.6 3.6 0 0 0-7.2 0v8z'/%3E%3Crect x='3' y='20' width='18' height='2.4' rx='1' fill='%23c084fc'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -374,7 +379,7 @@ body.cine #lbT,body.cine #lbB{height:9vh}
 
 <script>
 'use strict';
-const VER='0.7';
+const VER='0.8';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -395,6 +400,7 @@ function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+
 /* ЗВУК */
 const AU={ctx:null,gain:null,vol:.7,muted:false,
  init(){if(this.ctx)return;try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();this.gain=this.ctx.createGain();this.gain.gain.value=this.vol;this.gain.connect(this.ctx.destination)}catch(e){}},
+ unlock(){this.init();if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});if(this.gain)this.gain.gain.value=SET.muted?0:SET.vol},
  tone(f,d,type='sine',v=.25,slide=0,dl=0){if(!this.ctx||this.muted)return;const t0=this.ctx.currentTime+dl,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(Math.max(20,f),t0);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t0+d);g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(this.gain);o.start(t0);o.stop(t0+d+.03)},
  noise(d=.15,v=.25,f=1200,q=1,dl=0){if(!this.ctx||this.muted)return;const t0=this.ctx.currentTime+dl,n=(this.ctx.sampleRate*d)|0,b=this.ctx.createBuffer(1,n,this.ctx.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);const s=this.ctx.createBufferSource();s.buffer=b;const fl=this.ctx.createBiquadFilter();fl.type='bandpass';fl.frequency.value=f;fl.Q.value=q;const g=this.ctx.createGain();g.gain.value=v;s.connect(fl);fl.connect(g);g.connect(this.gain);s.start(t0)}
 };
@@ -1123,8 +1129,8 @@ function newPlayer(sv){
   else G.player.pts=Math.max(0,(sv.level||1)-1)*5;
  }
  calcStats();
- G.player.hp=sv?Math.min(sv.hp,G.player.maxhp):G.player.maxhp;
- G.player.mp=sv?Math.min(sv.mp,G.player.maxmp):G.player.maxmp;
+ G.player.hp=sv?Math.min(sv.hp||G.player.maxhp,G.player.maxhp):G.player.maxhp; // NaN-защита
+ G.player.mp=sv?Math.min(sv.mp||G.player.maxmp,G.player.maxmp):G.player.maxmp;
 }
 function makeEnemy(type,f,x,y){
  const b=ET[type];
@@ -1408,7 +1414,7 @@ function returnHub(){
   'Следующие врата откроются в другом месте.']);
  log('story','Врата ранга <b style="color:'+RANKC[RANKS[idx]]+'">'+RANKS[idx]+'</b> зачищены. Вы вернулись в Мир.');
  SFX.chest();
- G.mode='hub';G.hubGate=null;G.gateT=rand(22,40);
+ G.mode='hub';G.hubGate=null;G.gateT=rand(18,32);
  genHub();placePlayer();G.fade=1;
  checkQuests();saveGame();
 }
@@ -1434,6 +1440,7 @@ addEventListener('keydown',e=>{
  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(c))e.preventDefault();
  input.keys.add(c);
  if(!G.started)return;
+ if(anyModal()&&c!=='Escape'&&c!=='Tab')return; // ФИКС v0.8: навыки не срабатывают под окнами UI
  if(c==='KeyQ')castSkill('q');else if(c==='KeyE'){if(G.interact)doInteract();else castSkill('e')}
  else if(c==='KeyR')castSkill('r');else if(c==='KeyF')castSkill('f');
  else if(c==='KeyX')castSkill('x');else if(c==='KeyC')castSkill('c');
@@ -1457,6 +1464,7 @@ cvs.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){input.touchMo
   const w=screenToWorld(e.clientX,e.clientY);tryTapInteract(w);return}
  if(e.button===0)input.attackHeld=true;});
 addEventListener('pointerup',()=>input.attackHeld=false);
+addEventListener('pointerdown',()=>AU.unlock(),{once:true}); // iOS: звук по первому касанию
 addEventListener('mousemove',e=>{input.aimWorld=screenToWorld(e.clientX,e.clientY)});
 cvs.addEventListener('contextmenu',e=>e.preventDefault());
 const joyEl=$('joy'),knob=$('joyKnob'),jz=$('joyZone');let joyId=null,jcx=0,jcy=0;
@@ -1548,8 +1556,8 @@ function update(dt){
  for(const k in p.cds)p.cds[k]=Math.max(0,p.cds[k]-dt);
  p.mp=Math.min(p.maxmp,p.mp+(p.mpRegen||4)*dt);
  G.noCombat+=dt;
- if(G.noCombat>4&&p.hp<p.maxhp)p.hp=Math.min(p.maxhp,p.hp+p.maxhp*.012*dt);
- if(p.relMonolith){G.regenT+=dt;
+ if(!p.dead&&G.noCombat>4&&p.hp<p.maxhp)p.hp=Math.min(p.maxhp,p.hp+p.maxhp*.012*dt); // ФИКС v0.8: без регена у мёртвого
+ if(p.relMonolith&&!p.dead){G.regenT+=dt;
   if(G.regenT>5&&G.noCombat>3&&p.hp<p.maxhp){G.regenT=0;const h=Math.round(p.maxhp*.015);
    p.hp=Math.min(p.maxhp,p.hp+h);spawnText(p.x,p.y-1.4,'+'+h,'#4ade80')}}
  if(input.attackHeld&&!anyModal())basicAttack();
@@ -1635,6 +1643,7 @@ function update(dt){
   e.cd-=dt;e.specCd-=dt;const d=dist(e.x,e.y,p.x,p.y);const b=ET[e.type];
   const stealthBlind=G.stealth>0&&d>1.7;
   if(stealthBlind&&e.aggro&&d>2.5&&!e.boss)e.aggro=false;
+  if(e.aggro&&!e.boss&&!e.elite&&d>20)e.aggro=false; // leash: обычные враги отстают на дистанции
   if(!e.aggro&&d<(G.stealth>0?1.7:b.ag))e.aggro=true;
   let moved=false;
   if(e.stun<=0&&e.aggro&&!p.dead&&!stealthBlind){
@@ -1655,6 +1664,14 @@ function update(dt){
      e.specCd=5+rand(0,1.5);e.wind=.6;e.windMax=.6;e.breathA=Math.atan2(p.y-e.y,p.x-e.x);
     }else e.specCd=1.5;
    }
+   // ФИКС v0.8: восстановлена базовая атака врагов (wind-up → удар/выстрел/слэм)
+   if(e.cd<=0&&e.wind<=0){
+    if(b.ranged){
+     if(d<b.rng&&d>1.1){e.wind=e.windMax;e.cd=b.cd*rand(.85,1.2);e.castA=Math.atan2(p.y-e.y,p.x-e.x)}
+    }else if(b.slam){
+     if(d<2.5){e.wind=.55;e.windMax=.55;e.cd=b.cd*rand(.85,1.2);e.slamX=p.x;e.slamY=p.y}
+    }else if(d<e.rng+.35){e.wind=e.windMax;e.cd=b.cd*rand(.85,1.2)}
+   }
    const wantMove=b.ranged?(d<b.keep?-1:d>b.rng?1:0):(d>e.rng?1:0);
    if(wantMove!==0){const s2=e.spd*wantMove;let nx=(p.x-e.x)/(d||1)*s2,ny=(p.y-e.y)/(d||1)*s2;
     for(const o of G.enemies)if(o!==e&&!o.dead){const dd=dist(e.x,e.y,o.x,o.y);if(dd<.9&&dd>0){nx+=(e.x-o.x)/dd*1.2;ny+=(e.y-o.y)/dd*1.2}}
@@ -1673,6 +1690,12 @@ function update(dt){
      for(let j=-3;j<=3;j++){const a=e.breathA+j*.13;
       G.projs.push({x:e.x,y:e.y,vx:Math.cos(a)*6.5,vy:Math.sin(a)*6.5,t:0,life:1.15,dmg:e.atk*.55,own:'e',kind:'fire'});}
      e.breathA=undefined;e.swingT=.3;
+    }else if(e.castA!==undefined&&b.ranged){
+     SFX.shoot();
+     const n=b.burst?3:1;
+     for(let j=0;j<n;j++){const a=e.castA+(j-(n-1)/2)*.16;
+      G.projs.push({x:e.x,y:e.y,vx:Math.cos(a)*7.5,vy:Math.sin(a)*7.5,t:0,life:1.3,dmg:e.atk*.9,own:'e',kind:'ebolt'});}
+     e.castA=undefined;e.swingT=.25;
     }else if(e.slamX!==undefined&&b.slam){addFx({kind:'ring',x:e.slamX,y:e.slamY,r0:.3,r1:1.8,t:0,dur:.3,c:'#ef4444'});
      burst(e.slamX,e.slamY,14,'#ef4444',3);SFX.nova();G.punch=Math.min(.5,G.punch+.15);
      if(dist(p.x,p.y,e.slamX,e.slamY)<1.8&&p.inv<=0)hurtPlayer(e.atk*1.3);
@@ -1685,7 +1708,7 @@ function update(dt){
  for(let i=G.projs.length-1;i>=0;i--){const pr=G.projs[i];
   pr.x+=pr.vx*dt;pr.y+=pr.vy*dt;pr.t+=dt;
   if(pr.tr){pr.tr.push({x:pr.x,y:pr.y});if(pr.tr.length>7)pr.tr.shift()}
-  if(SET.parts&&Math.random()<.5)addPart(pr.x,pr.y,10,rand(-.5,.5),rand(-.5,.5),rand(.5,2),.3,pr.kind==='dagger'?1.6:2.2,pr.kind==='fire'?'#fb923c':pr.kind==='dagger'?'#84cc16':'#7dd3fc');
+  if(SET.parts&&Math.random()<.5)addPart(pr.x,pr.y,10,rand(-.5,.5),rand(-.5,.5),rand(.5,2),.3,pr.kind==='dagger'?1.6:2.2,pr.kind==='fire'?'#fb923c':pr.kind==='dagger'?'#84cc16':pr.kind==='ebolt'?'#f87171':'#7dd3fc');
   let kill=pr.t>pr.life||blocked(pr.x|0,pr.y|0);
   if(!kill){
    if(pr.own==='p'||pr.own==='s'){for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,pr.x,pr.y)<e.r+.18){
@@ -1797,7 +1820,7 @@ function hurtPlayer(dmg){
  const p=G.player;if(p.dead||p.inv>0)return;
  dmg=Math.round(dmg*rand(.9,1.1));p.hp-=dmg;G.noCombat=0;G.hurtT=1;addFury(6);G.punch=Math.min(.5,G.punch+.12);
  G.stealth=0;
- spawnText(p.x,p.y,'-'+dmg,'#f87171',true);SFX.hurt();
+ spawnText(p.x,p.y,'-'+dmg,'#f87171',false);SFX.hurt();
  if(SET.shake)G.cam.shake=Math.max(G.cam.shake,4);
  burst(p.x,p.y,8,'#ef4444',2.5);
  if(p.hp<=0){p.hp=0;p.dead=true;G.ultiT=0;G.whirl=null;SFX.die();
@@ -1817,9 +1840,10 @@ function pickup(L){
  invDirty();
 }
 function usePotion(kind){
+ const p=G.player;
+ if(!p||p.dead)return;
  const it=inv.find(i=>i.name===(kind==='potionHP'?'Зелье лечения':'Зелье маны'));
  if(!it){toast('Нет зелья');return}
- const p=G.player;
  if(kind==='potionHP'){p.hp=Math.min(p.maxhp,p.hp+p.maxhp*.45);addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:1.4,t:0,dur:.5,c:'#4ade80'})}
  else{p.mp=Math.min(p.maxmp,p.mp+p.maxmp*.55);addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:1.4,t:0,dur:.5,c:'#38bdf8'})}
  SFX.potion();it.qty--;if(it.qty<=0)inv.splice(inv.indexOf(it),1);invDirty();
@@ -2076,10 +2100,11 @@ function drawMini(c,type,S,grade=0){
  if(grade>=3){c.strokeStyle=GDCOL[3];c.lineWidth=2;c.beginPath();c.arc(S/2,S/2,S*.4,0,TAU);c.stroke()}
  c.restore();
 }
-function drawMiniMap(c,S,cell){
+function drawMiniMap(c,cell){
  if(!M.grid)return;
- c.clearRect(0,0,S,S);
- const ox=(S-M.W*cell)/2,oy=(S-M.H*cell)/2;
+ const W=c.canvas.width,H=c.canvas.height;
+ c.clearRect(0,0,W,H);
+ const ox=(W-M.W*cell)/2,oy=(H-M.H*cell)/2;
  c.fillStyle='rgba(255,255,255,.05)';
  for(let y=0;y<M.H;y++)for(let x=0;x<M.W;x++)if(M.grid[y*M.W+x])c.fillRect(ox+x*cell,oy+y*cell,cell-.5,cell-.5);
  const dot=(x,y,col,r)=>{c.fillStyle=col;c.beginPath();c.arc(ox+x*cell,oy+y*cell,r,0,TAU);c.fill()};
@@ -2092,7 +2117,7 @@ function drawMiniMap(c,S,cell){
  for(const e of G.enemies)dot(e.x,e.y,e.boss?'#f87171':e.elite?'#f59e0b':'#ef4444',e.boss?3.6:e.elite?3:2);
  if(G.player)dot(G.player.x,G.player.y,'#ffffff',3);
 }
-function drawBigMap(){const c=$('bigMap').getContext('2d');c.clearRect(0,0,360,360);drawMiniMap(c,360,7.5)}
+function drawBigMap(){const c=$('bigMap').getContext('2d');drawMiniMap(c,360/M.W)}
 $('mmPlus').onclick=()=>{G.mmZoom=Math.min(3,G.mmZoom+1);SFX.ui()};
 $('mmMinus').onclick=()=>{G.mmZoom=Math.max(1,G.mmZoom-1);SFX.ui()};
 function syncSettings(){
@@ -2122,7 +2147,9 @@ function toast(msg,col){
 }
 function splash(t,s,red){$('splashT').textContent=t;$('splashS').textContent=s||'';
  const el=$('splash');el.classList.toggle('red',!!red);el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
-const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Врата»</h4>
+const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Клинки Бездны»</h4>
+<b>v0.8 (текущая)</b> — ВОССТАНОВЛЕН БОЙ ВРАГОВ: у мобов снова есть замах, маги стреляют болтами, Палач бьёт слэмом по площади; leash-агро; ввод навыков блокируется при открытых окнах; миникарта вписана в холст; NaN-защита HP в старых сейвах; автосейв при сворачивании вкладки; разблокировка звука на iOS; Enter в поле имени; фавикон.<br>
+<b>v0.7</b> — Мир-хаб с вратами рангов E→S и Алыми вратами.<br>
 <b>v0.6</b> — Власть Теней, хранилище, имя игрока.<br>
 <b>v0.7 (текущая)</b> — СТРУКТУРА МИРА: хаб «Мир» с пьедесталами; врата открываются по таймеру в случайном месте (60с), ранги E→S = сложность и награда; алые врата (A/S) с владыками; зачистка → выход → награда → новые врата elsewhere. ФИКСЫ: инвентарь (неверный id в toggleDrawer — кнопка падала с ошибкой), врата выхода не открывались (G.cleared не сбрасывался между подземельями), смена имени в Настройках.<br>
 <b>v1.0 (план)</b>: порт на Godot 4 — нативные exe/apk, ассет-спрайты.<br>
@@ -2551,7 +2578,11 @@ function render(){
   else if(pr.kind==='sbolt'){dGl(X,Y,10,'#7dd3fc',.7);
    ctx.fillStyle='#bae6fd';ctx.save();ctx.translate(X,Y);ctx.rotate(Math.atan2(pr.vy,pr.vx)+Math.PI/2);
    pth(ctx,[0,-5,2.6,0,0,5,-2.6,0]);ctx.fill();ctx.restore();}
-  else{const c2='#7dd3fc';dGl(X,Y,10,glow(c2),.7);
+  else if(pr.kind==='ebolt'){dGl(X,Y,11,'#f87171',.7);
+   ctx.save();ctx.translate(X,Y);ctx.rotate(Math.atan2(pr.vy,pr.vx)+Math.PI/2);
+   ctx.fillStyle='#fecaca';pth(ctx,[0,-5,2.6,0,0,5,-2.6,0]);ctx.fill();
+   ctx.fillStyle='#ef4444';pth(ctx,[0,5,1.6,1.4,-1.6,1.4]);ctx.fill();ctx.restore();}
+  else{const c2='#7dd3fc';dGl(X,Y,10,c2,.7);
    ctx.fillStyle=c2;ctx.save();ctx.translate(X,Y);ctx.rotate(Math.atan2(pr.vy,pr.vx)+Math.PI/2);
    pth(ctx,[0,-5,2.6,0,0,5,-2.6,0]);ctx.fill();ctx.restore()}});
  for(const f of G.fx)push(f.x,f.y,()=>{
@@ -2621,7 +2652,7 @@ function render(){
  }
  ctx.globalAlpha=1;
  if(G.fade>0){ctx.fillStyle='rgba(3,2,10,'+G.fade+')';ctx.fillRect(0,0,vw,vh)}
- drawMiniMap($('mm').getContext('2d'),340,340/(M.W*G.mmZoom));
+ drawMiniMap($('mm').getContext('2d'),Math.min(340,260)/(M.W*G.mmZoom));
  renderQuests();
 }
 
@@ -2643,7 +2674,8 @@ function updateHUD(){
   setTxt('mmTitle','Мир');setTxt('mmFloor','Врат зачищено: '+G.counters.gates);
  }else{
   setTxt('floorLabel','ВРАТА РАНГА '+RANKS[G.gateRank]+(G.gateRed?' · АЛЫЕ':''));
-  setTxt('gateTimer','');
+  const foes=G.enemies.length+G.wave.budget+(G.wave.bossPending?1:0);
+  setTxt('gateTimer',M.portal&&M.portal.active?'ВЫХОД ОТКРЫТ · НАЙДИТЕ ПОРТАЛ':'ВРАГОВ ОСТАЛОСЬ: '+foes);
   setTxt('mmTitle','Врата '+RANKS[G.gateRank]);setTxt('mmFloor','Сложность '+G.gateDiff);
  }
  setTxt('armyCount',activeShadows().length+'/'+armyMax());
@@ -2716,7 +2748,8 @@ function startWorld(){
  genHub();placePlayer();
 }
 function begin(cont,name){
- AU.init();if(AU.gain)AU.gain.gain.value=SET.muted?0:SET.vol;
+ if(G.started)return;
+ AU.unlock();
  cvs.classList.toggle('fx',SET.filter);
  if(cont&&loadGame()){log('system','Прогресс загружен. С возвращением, '+(G.player.name||'Монарх')+'.')}
  else{G.seed=(Date.now()%1e9)||12345;newPlayer(null);
@@ -2762,6 +2795,8 @@ function initIntro(){
   `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА':'ВОЙТИ В МИР'}</button>`;
  $('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';
  if(sv)$('btnCont').onclick=()=>begin(true);
+ const ni=$('nameInp');
+ if(ni)ni.addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNew').click()});
  $('btnNew').onclick=()=>{
   try{['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].forEach(k=>localStorage.removeItem(k))}catch(e){}
   begin(false,$('nameInp')?$('nameInp').value:'');
@@ -2781,6 +2816,8 @@ function loop(t){
 initIntro();
 requestAnimationFrame(loop);
 addEventListener('beforeunload',()=>{if(G.started)saveGame()});
+addEventListener('pagehide',()=>{if(G.started)saveGame()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.started)saveGame()});
 </script>
 </body>
 </html>
