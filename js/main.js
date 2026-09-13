@@ -5,7 +5,7 @@ const SKEY='shadow_ascension_v4';
 function saveGame(){
  if(!G.player)return;
  try{localStorage.setItem(SKEY,JSON.stringify({v:7,seed:G.seed,questSeq:G.questSeq,tutArise:G.tutArise,
-  counters:G.counters,riseBonus:G.riseBonus,daily:G.daily,army:G.army,
+  counters:G.counters,riseBonus:G.riseBonus,daily:G.daily,army:G.army,stance:G.stance||'assault',
   p:{name:G.player.name||'',level:G.player.level,exp:G.player.exp,gold:G.player.gold,crystals:G.player.crystals,essence:G.player.essence,fury:G.player.fury,hp:G.player.hp,mp:G.player.mp,skillLv:G.player.skillLv,stats:G.player.stats,pts:G.player.pts},
   inv:inv,eq:{weapon:equipped.weapon?equipped.weapon.uid:0,armor:equipped.armor?equipped.armor.uid:0,ring:equipped.ring?equipped.ring.uid:0,relic:equipped.relic?equipped.relic.uid:0},
   shadows:G.shadows.map(s=>({type:s.type,lvl:s.lvl,hp:Math.round(s.hp),grade:s.grade||0,bench:!!s.bench})),set:SET}))}catch(e){}
@@ -18,6 +18,7 @@ function loadGame(){
   G.seed=d.seed;G.questSeq=d.questSeq||0;Object.assign(G.counters,d.counters||{});
   G.counters.army=G.army?G.counters.army||1:1;
   G.riseBonus=d.riseBonus||0;G.tutArise=!!d.tutArise;
+ G.stance=STANCES[d.stance]?d.stance:'assault'; // v0.9: стойка армии
   G.daily=d.daily&&d.daily.d===todayStr()?d.daily:null;
   // армия (v7: {lvl,cnt}; v5/v6: поле army было массивом теней)
   if(d.army7)G.army=d.army7;
@@ -58,7 +59,8 @@ function begin(cont,name){
   log('story','Вы в <b>Мире</b> — точке сбора охотников. Ждите врата.');
   log('system','<b>Система:</b> врата открываются в случайных местах. Ранг врат определяет опасность и награду. «АРИЗ!» (X) у тел — ваша армия теней.');
   sysNotify('СИСТЕМА',['Добро пожаловать, Охотник <b>'+G.player.name+'</b>.','Вы стали Игроком. Первые врата откроются через несколько секунд.']);}
- if(!G.quests.length)initQuests();
+ if(!G.quests.length)initQuests();
+ if(typeof updateStanceChip==='function')updateStanceChip(); // v0.9: чип стойки по сейву
  ensureDaily();
  calcStats();startWorld();
  const act=activeShadows();
@@ -84,8 +86,8 @@ $('btnRespawn').onclick=()=>{
 function initIntro(){
  drawPortrait();
  const sv=hasSave();
- const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки · <b>X</b> — АРИЗ! · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
- const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия и хранилище';
+ const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
+ const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';
  $('nameWrap').style.display=sv?'none':'flex';
  $('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+
   `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА':'ВОЙТИ В МИР'}</button>`;

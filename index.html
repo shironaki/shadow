@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <!--
 ═══════════════════════════════════════════════════════════════════
- ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.8.1 «Клинки Бездны»
+ ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.9 «Владыки»
  ─────────────────────────────────────────────────────────────────
- v0.8.1 — ТЕКУЩАЯ. ТЕЛЕФОН: починен джойстик (зона касаний была
+ v0.9 — ТЕКУЩАЯ. ДВИЖОК: монолит разрезан на 9 модулей (js/ — классические
+   скрипты, без сборки). ФИЧИ: золотые мега-врата с мегабоссами
+   (Беллион/Беру) → тени-«Легенды» (ранг 5); полное управление армией
+   (стойки Штурм/Оборона/Стой, фокус-цель, отзыв); добыча руды из жил
+   в подземельях; подбор лута шире + магнит; новый портрет и человечная
+   форма персонажа; наклон корпуса по направлению атаки и движения.
+ v0.8.1 — телефон: починен джойстик (зона касаний была
    недоступна из-за pointer-events:none у HUD), раскладка управления
    разведена по углам (журнал/карточка отряда скрыты, скиллы одной
    строкой, safe-area iPhone), «джойстик справа» переносит и зону.
@@ -118,6 +124,9 @@ body.cine #lbT,body.cine #lbB{height:9vh}
 #armyBadge{width:52px;height:52px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 #armyBadge .ic{font-size:17px;color:#7dd3fc}
 #armyBadge span{font-size:9.5px;color:var(--dim)}
+#stanceChip{margin-top:5px;padding:5px 10px;border-radius:9px;background:var(--panel);border:1px solid var(--line);font-size:10.5px;color:#fbbf24;cursor:pointer;text-align:center;line-height:1.5;transition:border-color .2s}
+#stanceChip:hover{border-color:#fbbf24}
+#stanceChip small{display:block;font-size:8.5px;color:var(--dim)}
 .sk{position:relative;width:58px;height:58px;border-radius:13px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #sk-q{background:radial-gradient(circle at 35% 30%,rgba(139,92,246,.5),rgba(20,12,44,.95))}
 #sk-e{background:radial-gradient(circle at 35% 30%,rgba(74,222,128,.3),rgba(10,26,18,.95))}
@@ -344,6 +353,7 @@ body.cine #lbT,body.cine #lbB{height:9vh}
   <div id="joyZone"><div id="joy"><span class="kl" style="top:6px;left:50%;transform:translateX(-50%)">W</span><span class="kl" style="left:10px;top:50%;transform:translateY(-50%)">A</span><span class="kl" style="right:10px;top:50%;transform:translateY(-50%)">D</span><span class="kl" style="bottom:6px;left:50%;transform:translateX(-50%)">S</span><div id="joyKnob"></div></div></div>
   <div id="skillbar">
     <div id="armyBadge" class="cl"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8v10l-3-2-2.5 2-2.5-2-2.5 2L7 18l-3 2V10a8 8 0 0 1 8-8z"/></svg><span id="armyCount">0/2</span></div>
+    <div id="stanceChip" class="cl">Штурм<small>V — приказ</small></div>
     <div class="sk cl" id="sk-q"><span class="key">Q</span></div>
     <div class="sk cl" id="sk-e"><span class="key">E</span></div>
     <div class="sk cl" id="sk-r"><span class="key">R</span></div>

@@ -40,14 +40,14 @@ function makeEnemy(type,f,x,y){
   spec:b.spec||null,specCd:3};
 }
 function makeShadow(type,f,x,y,i,grade=0){
- const b=ET[type]||ET.soldier,m=GDM[clamp(grade,0,3)]*armyPower();
+ const b=ET[type]||ET.soldier,m=GDM[clamp(grade,0,4)]*armyPower(); // v0.9: ранг 4 «Легенда»
  const hp=b.hp*.85*mh(f)*m,atk=b.atk*.7*ma(f)*m;
- return {kind:'shadow',type,x,y,r:.34,lvl:f,grade:clamp(grade,0,3),bench:false,base:{hp:b.hp*.85*mh(f),atk:b.atk*.7*ma(f)},
+ return {kind:'shadow',type,x,y,r:.34,lvl:f,grade:clamp(grade,0,4),bench:false,base:{hp:b.hp*.85*mh(f),atk:b.atk*.7*ma(f)},
   atk,spd:type==='hound'?3.6:2.6,maxhp:hp,hp,cd:0,walk:rand(9),face:1,idx:i,rise:0,dead:false,swingT:0,mv:true,target:null,flash:0,stT:0};
 }
 function promoteShadow(idx){
  const s=G.shadows[idx];if(!s)return;
- if(s.grade>=3){toast('Достигнут ранг Маршал');return}
+ if(s.grade>=4){toast('Достигнут высший ранг: Легенда','#f0abfc');return}
  const cost=GDC[s.grade+1];
  if(G.player.essence<cost){toast('Нужно эссенции: '+cost);SFX.ui();return}
  G.player.essence-=cost;s.grade++;

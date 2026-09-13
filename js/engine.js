@@ -1,6 +1,6 @@
 'use strict';
 /* ═══ SHADOW ENGINE · ядро: утилиты, звук, ввод, камера, свет, физика ═══ */
-const VER='0.8.1';
+const VER='0.9';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -93,6 +93,7 @@ addEventListener('keydown',e=>{
  if(c==='KeyQ')castSkill('q');else if(c==='KeyE'){if(G.interact)doInteract();else castSkill('e')}
  else if(c==='KeyR')castSkill('r');else if(c==='KeyF')castSkill('f');
  else if(c==='KeyX')castSkill('x');else if(c==='KeyC')castSkill('c');
+ else if(c==='KeyV')cycleStance();else if(c==='KeyT')recallShadows(); // v0.9: приказы теням
  else if(c==='Space')castSkill('u');
  else if(c==='Digit1')usePotion('potionHP');else if(c==='Digit2')usePotion('potionMP');
  else if(c==='Tab')toggleDrawer('invPanel');

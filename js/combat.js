@@ -19,6 +19,7 @@ function hitEnemy(e,dmg,opts={}){
  if(G.ultiT>0&&opts.src!=='shadow')dmg*=1.35;
  dmg=Math.max(1,Math.round(dmg*rand(.9,1.1)));
  e.hp-=dmg;e.flash=.13;e.aggro=true;
+ if(opts.src!=='shadow'){G.focus=e;G.focusT=8} // v0.9: приоритетная цель армии
  spawnText(e.x,e.y,'-'+dmg,crit?'#fca5a5':opts.src==='shadow'?'#7dd3fc':'#ffffff',crit);
  if(crit){SFX.crit();if(SET.shake)G.cam.shake=Math.max(G.cam.shake,5)}else if(opts.src!=='shadow')SFX.hit();
  burst(e.x,e.y,crit?10:5,crit?'#f87171':'#e9d5ff',2.5);
@@ -38,6 +39,15 @@ function killEnemy(e){
  if(e.elite||e.boss)G.counters.elites++;
  ensureDaily();G.daily.kills++;if(e.elite||e.boss)G.daily.elites++;checkDaily();
  // владыка алых врат — награда сразу (плюс ранговая на выходе)
+ if(e.gateBoss==='mega'){ // v0.9: мегабосс
+  p.essence+=8;p.gold+=500;
+  dropLoot('relic',e.x,e.y,makeItem('relic',G.gateDiff));
+  dropLoot('relic',e.x+.5,e.y+.2,makeItem('relic',G.gateDiff));
+  dropLoot('gem',e.x,e.y,25);
+  dropLoot('crystalQ',e.x,e.y,3);
+  sysNotify('МЕГАБОСС ПАЛ',[b.n+' повержен!','Тело хранит <b style="color:#f0abfc">Легендарную тень</b> — используйте АРИЗ!','Награда: двойная реликвия, 25 кристаллов, эссенция +8.']);
+  splash('МЕГАБОСС ПАЛ','ТЕНЬ ВЛАДЫКИ ДОСТУПНА');SFX.chest();G.cam.shake=12;
+ }
  if(e.gateBoss==='lord'){
   p.essence+=3;
   dropLoot('relic',e.x,e.y,makeItem('relic',G.gateDiff));
@@ -60,7 +70,7 @@ function killEnemy(e){
  if((e.elite||e.boss)&&!e.gateBoss){p.essence+=e.boss?3:1;p.gold+=e.boss?120:40;
   log('combat',`<b>${b.n}</b> повержен!`);}
  const rank=e.boss?'boss':e.elite?'elite':'norm';
- G.corpses.push({type:e.type,x:e.x,y:e.y,t:0,rank,arise:0,burn:0,riseCh:b.rise});
+ G.corpses.push({type:e.type,x:e.x,y:e.y,t:0,rank,arise:0,burn:0,riseCh:b.rise,mega:b.mega?1:0});
  if(!G.tutArise){G.tutArise=true;
   toast('Тело врага пало — нажмите X или кнопку «АРИЗ!» рядом с ним','#93c5fd');
   log('system','<b>Система:</b> используйте «АРИЗ!» (X) у тела, чтобы извлечь тень.');}
@@ -79,9 +89,27 @@ function gainExp(v){
   log('system',`<b>Уровень повышен: ${p.level}!</b>`);
   checkQuests();need=Math.round(80*Math.pow(p.level,1.35)+30);saveGame();}
 }
+function hitOres(x,y,r){ // v0.9: добыча руды ударами
+ if(G.mode!=='dungeon')return;
+ for(const c of M.crystals){
+  if(c.mined||c.hp===undefined)continue;
+  if(dist(c.x,c.y,x,y)>r+.35)continue;
+  c.hp--;SFX.hit();burst(c.x,c.y,4,'#93c5fd',1.6);
+  if(c.hp<=0){c.mined=true;
+   const gold=irand(8,20)+G.gateDiff*2;
+   dropLoot('gold',c.x,c.y,gold);
+   dropLoot(['mat1','mat2','mat3'][irand(0,2)],c.x,c.y,1);
+   if(Math.random()<.2)dropLoot('gem',c.x,c.y,irand(1,2));
+   if(Math.random()<.08)dropLoot('crystalQ',c.x,c.y,1);
+   burst(c.x,c.y,12,'#67e8f9',2.5);
+   log('combat','Добыта <b>руда</b> из жилы: золото, материалы');checkQuests();
+  }else spawnText(c.x,c.y-.8,'руда','#a5f3fc');
+ }
+}
 function meleeArc(ang,range,arc,mult,opts={}){
  const p=G.player;
  addFx({kind:'arc',x:p.x,y:p.y,dir:ang,range,arc,t:0,dur:opts.dur||.2,c1:opts.c1||'rgba(168,85,247,.5)',c2:opts.c2||'#e9d5ff'});
+ hitOres(p.x,p.y,range*.9);
  for(const e of G.enemies){
   const d=dist(e.x,e.y,p.x,p.y);if(d>range+e.r)continue;
   let a=Math.atan2(e.y-p.y,e.x-p.x)-ang;while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;
@@ -121,6 +149,7 @@ function basicAttack(){
 function meleeArc360(range,mult,opts={}){
  const p=G.player;
  addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:range,t:0,dur:.25,c:'#a855f7'});
+ hitOres(p.x,p.y,range*.9);
  for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,p.x,p.y)<range+e.r){hitEnemy(e,p.atk*mult,opts);if(!e.dead)applyPoison(e,p.atk*.12)}}
 }
 function castSkill(k){
@@ -205,19 +234,25 @@ function pickRank(){
 function spawnHubGate(){
  const idx=pickRank();
  const sp=M.spawns[irand(0,M.spawns.length-1)];
- G.hubGate={x:sp.x,y:sp.y,rank:idx,red:idx>=4&&Math.random()<.5,life:60};
- sysNotify('ОБНАРУЖЕНЫ ВРАТА',[
+ // v0.9: золотые мега-врата Владык — шанс растёт после 9 зачисток
+ const mega=G.counters.gates>=9&&Math.random()<.16&&idx>=3;
+ G.hubGate={x:sp.x,y:sp.y,rank:idx,red:!mega&&idx>=4&&Math.random()<.5,mega,life:60};
+ if(mega)sysNotify('ЗОЛОТЫЕ МЕГА-ВРАТА',[
+  '<b style="color:#fbbf24">ВРАТА ВЛАДЫК</b>',
+  'Внутри ждёт мегабосс. Победа даст <b style="color:#f0abfc">Легендарную тень</b>.',
+  'Отмечены на карте. Врата закроются через 60 секунд.']);
+ else sysNotify('ОБНАРУЖЕНЫ ВРАТА',[
   G.hubGate.red?'<b style="color:#f87171">АЛЫЕ ВРАТА · Дворец Демонов</b>':'Врата ранга <b style="color:'+RANKC[RANKS[idx]]+'">'+RANKS[idx]+'</b>',
   'Отмечены на карте. Врата закроются через 60 секунд.']);
  SFX.portal();
 }
 function enterHubGate(){
  const g=G.hubGate;if(!g||G.mode!=='hub')return;
- genDungeon(g.rank,g.red);placePlayer();
+ genDungeon(g.rank,g.red,g.mega);placePlayer();
  G.mode='dungeon';G.fade=1;SFX.gate();
  G.cine=1.8;document.body.classList.add('cine');
- splash(g.red?'ДВОРЕЦ ДЕМОНОВ':'ВРАТА РАНГА '+RANKS[g.rank],g.red?'ВЛАДЫКА ЖДЁТ':'ЗАЧИСТИТЕ ПОДЗЕМЕЛЬЕ',g.red);
- sysNotify('ВХОД В ВРАТА',['Уничтожьте всех демонов.','Босс: '+(g.red?'<b>Владыка Дворца</b>':g.rank>=2?'<b>Тёмный Рыцарь</b>':'нет')+'.']);
+ splash(g.mega?'ЗОЛОТЫЕ МЕГА-ВРАТА':g.red?'ДВОРЕЦ ДЕМОНОВ':'ВРАТА РАНГА '+RANKS[g.rank],g.mega?'ВЛАДЫКА ЖДЁТ':g.red?'ВЛАДЫКА ЖДЁТ':'ЗАЧИСТИТЕ ПОДЗЕМЕЛЬЕ',g.mega||g.red);
+ sysNotify('ВХОД В ВРАТА',['Уничтожьте всех демонов.','Босс: '+(g.mega?'<b style="color:#fbbf24">Мегабосс Владык</b>':g.red?'<b>Владыка Дворца</b>':g.rank>=2?'<b>Тёмный Рыцарь</b>':'нет')+'.']);
  log('story','Вы вошли в врата ранга <b style="color:'+RANKC[RANKS[g.rank]]+'">'+RANKS[g.rank]+'</b>.');
  saveGame();
 }
@@ -253,7 +288,7 @@ function update(dt){
   if(Math.random()<.6)G.ghosts.push({x:p.x,y:p.y,face:p.face,t:0});}
  else{p.vx=lerp(p.vx,md.wx*sp*md.l,1-Math.exp(-12*dt));p.vy=lerp(p.vy,md.wy*sp*md.l,1-Math.exp(-12*dt));
   collideMove(p,p.vx*dt,p.vy*dt);}
- if(md.l>.05&&!input.aimWorld){const l=Math.hypot(md.wx,md.wy)||1;p.aimX=md.wx/l;p.aimY=md.wy/l;if(Math.abs(md.wx)>.15)p.face=md.wx>0?1:-1}
+ if(md.l>.05&&p.atkT<=0&&p.swingT<=0){const l=Math.hypot(md.wx,md.wy)||1;p.aimX=md.wx/l;p.aimY=md.wy/l;if(Math.abs(md.wx)>.15)p.face=md.wx>0?1:-1} // v0.9: тело поворачивается по движению
  p.walk+=dt*(p.moving?1:.35);
  p.atkT=Math.max(0,p.atkT-dt);p.swingT=Math.max(0,p.swingT-dt);p.inv=Math.max(0,p.inv-dt);
  p.comboT-=dt;if(p.comboT<=0)p.combo=0;
@@ -321,11 +356,11 @@ function update(dt){
   }else if(G.wave.bossPending){
    const r=M.rooms[M.rooms.length-1];
    const e=makeEnemy(G.wave.bossPending,G.gateDiff+(G.gateRed?2:0),r.cx,r.cy);
-   e.aggro=true;e.gateBoss=G.gateRed?'lord':'boss';e.specCd=2.5;
-   G.wave.bossPending=null;
-   G.enemies.push(e);SFX.roar();G.cam.shake=9;G.punch=.4;
-   splash(G.gateRed?'ВЛАДЫКА ДВОРЦА':'ТЁМНЫЙ РЫЦАРЬ',ET[G.wave.bossPending||e.type].n,G.gateRed);
-   sysNotify('БОСС',[(G.gateRed?'<b>Владыка Дворца</b>: ':'<b>Хранитель врат</b>: ')+ET[e.type].n]);
+   e.aggro=true;e.gateBoss=G.gateMega?'mega':G.gateRed?'lord':'boss';e.specCd=2.5;
+   const bt=G.wave.bossPending;G.wave.bossPending=null;
+   G.enemies.push(e);SFX.roar();G.cam.shake=G.gateMega?14:9;G.punch=.4;
+   splash(G.gateMega?'МЕГАБОСС':G.gateRed?'ВЛАДЫКА ДВОРЦА':'ТЁМНЫЙ РЫЦАРЬ',ET[bt].n,G.gateMega||G.gateRed);
+   sysNotify('БОСС',[(G.gateMega?'<b style="color:#fbbf24">Мегабосс</b>: ':G.gateRed?'<b>Владыка Дворца</b>: ':'<b>Хранитель врат</b>: ')+ET[e.type].n]);
   }else if(G.enemies.length===0&&!G.cleared){
    // ФИКС v0.7: cleared корректно сбрасывается в genFloor/genHub — врата выхода всегда откроются
    G.cleared=true;M.portal.active=true;SFX.portal();
@@ -424,19 +459,20 @@ function update(dt){
   if(kill){burst(pr.x,pr.y,5,pr.kind==='fire'?'#fb923c':'#a78bfa',2);G.projs.splice(i,1)}
  }
  updateShadows(dt,p); // ИИ армии теней — модуль shadows.js
+ if(G.focus){G.focusT-=dt;if(G.focusT<=0||G.focus.dead||G.focus.hp<=0)G.focus=null}
 
 for(let i=G.loots.length-1;i>=0;i--){const L=G.loots[i];L.t+=dt;
   L.vx*=Math.exp(-6*dt);L.vy*=Math.exp(-6*dt);
   const d=dist(L.x,L.y,p.x,p.y);
-  if(d<2.6&&L.t>.4){const pull=14*(1-d/2.6);L.vx+=(p.x-L.x)/d*pull;L.vy+=(p.y-L.y)/d*pull}
+  if(d<3.4&&L.t>.4){const pull=16*(1-d/3.4);L.vx+=(p.x-L.x)/d*pull;L.vy+=(p.y-L.y)/d*pull} // v0.9: магнит шире
   L.x+=L.vx*dt;L.y+=L.vy*dt;
-  if(d<.55&&L.t>.35){pickup(L);G.loots.splice(i,1)}
+  if(d<.8&&L.t>.35){pickup(L);G.loots.splice(i,1)}
  }
  for(let i=G.corpses.length-1;i>=0;i--){const c=G.corpses[i];c.t+=dt;
   if(c.arise>0){c.arise-=dt;
    if(SET.parts&&Math.random()<dt*40)addPart(c.x+rand(-.25,.25),c.y,rand(0,4),0,0,rand(4,8),.6,2,'#60a5fa');
    if(c.arise<=0){
-    const s=makeShadow(c.type,G.gateDiff,c.x,c.y,G.shadows.length,0);s.rise=1;
+    const s=makeShadow(c.type,G.gateDiff,c.x,c.y,G.shadows.length,c.mega?4:0);s.rise=1; // v0.9: мегабосс → Легенда
     if(activeShadows().length>=armyMax()){s.bench=true;
      toast('Строй полон — '+shName(s)+' отправлен в хранилище','#93c5fd');
      G.shadows.push(s);
@@ -446,6 +482,7 @@ for(let i=G.loots.length-1;i>=0;i--){const L=G.loots[i];L.t+=dt;
     burst(c.x,c.y,20,'#7dd3fc',3);
     log('system',`Тень Призвана: <b>${shName(s)}</b> · Власть ${G.army.cnt}/${armyNeed(G.army.lvl)}`);
     if(c.rank==='boss'){splash('АРИЗ!','ВЛАДЫКА ПРИСЯГНУЛ ВАМ');sysNotify('АРИЗ',['Тень владыки пополнит армию: <b>'+shName(s)+'</b>'])}
+    if(c.mega){splash('ЛЕГЕНДА ПРИСЯГНУЛА','РАНГ 5 · ВЛАДЫКА ТЕНЕЙ');sysNotify('ЛЕГЕНДА',['<b style="color:#f0abfc">'+shName(s)+'</b> — легендарная тень в вашем войске!'])}
     checkQuests();renderShadows();
     G.corpses.splice(i,1);}
    continue;}

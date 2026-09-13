@@ -75,7 +75,7 @@ function genFloor(diff){
    if(type==='braz')nb++;else nw++;
    M.torches.push({type,x:x+.5,y:y+.5,seed:R()*10});
   }
-  if(R()<.65)M.crystals.push({x:r.x+1+R()*(r.w-2),y:r.y+1+R()*(r.h-2),seed:R()*10,v:irand(0,2)});
+  if(R()<.75)M.crystals.push({x:r.x+1+R()*(r.w-2),y:r.y+1+R()*(r.h-2),seed:R()*10,v:irand(0,2),hp:3,mined:false}); // v0.9: руда — жилы с hp
  }
  const clear9=(x,y)=>{for(let j=-1;j<=1;j++)for(let i2=-1;i2<=1;i2++)if(blocked(x+i2,y+j))return false;return true};
  for(const r of M.rooms){
@@ -93,13 +93,14 @@ function genFloor(diff){
  prerender(diff);
  G.fogs=[];for(let i=0;i<6;i++)G.fogs.push({x:M.rooms[0].cx+rand(-14,14),y:M.rooms[0].cy+rand(-10,10),r:rand(60,130),ph:rand(TAU)});
 }
-function genDungeon(idx,red){
- const diff=1+idx*2+(red?1:0);
- G.gateDiff=diff;G.gateRank=idx;G.gateRed=red;
+function genDungeon(idx,red,mega){
+ const diff=1+idx*2+(red?1:0)+(mega?2:0);
+ G.gateDiff=diff;G.gateRank=idx;G.gateRed=red;G.gateMega=!!mega;
  genFloor(diff);
- const budget=6+idx*3;
+ const budget=6+idx*3+(mega?4:0);
  let bossPending=null;
- if(idx>=2)bossPending=red?['igirs','baran','kamish'][G.counters.gates%3]:'knight';
+ if(mega)bossPending=G.counters.gates%2?'bel':'beru'; // v0.9: мегабосс
+ else if(idx>=2)bossPending=red?['igirs','baran','kamish'][G.counters.gates%3]:'knight';
  G.wave={budget,t:1.6,eliteAt:bossPending?0:Math.round(budget*.45),eliteDone:false,bossPending};
  G.cleared=false;G.enemies=[];G.projs=[];G.corpses=[];G.loots=[];G.hands=[];G.strikes=[];
 }

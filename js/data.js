@@ -23,13 +23,16 @@ const ET={
  knight:{n:'Тёмный Рыцарь',hp:950,atk:30,spd:2.4,r:.7,exp:420,ag:11,rng:1.5,cd:1.4,burst:1,boss:1,g:[80,160],rise:.3},
  igirs:{n:'Игрис, Рыцарь-Командир',hp:1700,atk:36,spd:2.9,r:.7,exp:900,ag:13,rng:1.5,cd:1.2,boss:1,spec:'dash',g:[200,400],rise:0},
  baran:{n:'Баран, Монарх Белого Пламени',hp:2000,atk:34,spd:1.9,r:.7,exp:1100,ag:13,rng:6.5,keep:3.4,cd:1.7,ranged:1,burst:1,boss:1,spec:'lightning',g:[240,480],rise:0},
- kamish:{n:'Камиш, Пожиратель',hp:2600,atk:44,spd:2.2,r:.8,exp:1500,ag:13,rng:1.7,cd:1.9,slam:1,boss:1,spec:'breath',g:[300,600],rise:0}
+ kamish:{n:'Камиш, Пожиратель',hp:2600,atk:44,spd:2.2,r:.8,exp:1500,ag:13,rng:1.7,cd:1.9,slam:1,boss:1,spec:'breath',g:[300,600],rise:0},
+ bel:{n:'Беллион, Гроссмейстер Теней',hp:5600,atk:54,spd:2.7,r:.85,exp:3200,ag:14,rng:1.85,cd:1.5,slam:1,boss:1,mega:1,spec:'dash',g:[520,940],rise:1},
+ beru:{n:'Беру, Король Муравьёв',hp:4600,atk:47,spd:3.7,r:.75,exp:2600,ag:15,rng:1.4,cd:1.0,boss:1,mega:1,spec:'dash',g:[440,800],rise:1}
 };
-const SHN={soldier:'Теневой Солдат',hound:'Теневой Гончий',mage:'Теневой Маг',knight:'Теневой Рыцарь',igirs:'Игрис',baran:'Баран',kamish:'Камиш'};
-const GDN=['Обычная','Отборная','Элитная','Маршал'];
-const GDM=[1,1.25,1.55,2];
-const GDC=[0,4,9,16];
-const GDCOL=['#64748b','#60a5fa','#a78bfa','#fbbf24'];
+const SHN={soldier:'Теневой Солдат',hound:'Теневой Гончий',mage:'Теневой Маг',knight:'Теневой Рыцарь',igirs:'Игрис',baran:'Баран',kamish:'Камиш',bel:'Беллион',beru:'Беру'};
+const STANCES={assault:{n:'Штурм',d:'тени атакуют всех в радиусе'},defend:{n:'Оборона',d:'тени держатся рядом и бьют близких'},hold:{n:'Стой',d:'тени стоят на месте'}};
+const GDN=['Обычная','Отборная','Элитная','Маршал','Легенда'];
+const GDM=[1,1.25,1.55,2,2.7];
+const GDC=[0,4,9,16,28];
+const GDCOL=['#64748b','#60a5fa','#a78bfa','#fbbf24','#f0abfc'];
 const REL={kasaka:{n:'Клинок Касаки',desc:'Ваши удары парализуют врагов (18%, 0.7с). Не действует на владык.'},baruka:{n:'Кинжал Баруки',desc:'+12% к шансу крита, критический урон ×3.4.'},monolith:{n:'Слеза Монолита',desc:'Вне боя восстанавливает 1.5% здоровья каждые 5 секунд.'},heart:{n:'Сердце Монарха',desc:'+50% к набору ярости.'}};
 const RARS=[{n:'Обычный',c:'#9ca3af'},{n:'Магический',c:'#60a5fa'},{n:'Редкий',c:'#a78bfa'},{n:'Эпический',c:'#f59e0b'}];
 const RC=r=>RARS[clamp(r|0,0,3)].c;
@@ -44,7 +47,8 @@ const G={started:false,mode:'hub',gateRank:0,gateRed:false,gateDiff:1,hubGate:nu
  army:{lvl:1,cnt:0},
  cam:{x:5,y:5,shake:0},wave:{budget:0,t:2,eliteAt:0,eliteDone:true,bossPending:null},cleared:false,ultiT:0,ultiTick:0,
  counters:{kills:0,summons:0,elites:0,crystals:0,gates:0,army:1},quests:[],questSeq:0,riseBonus:0,
- interact:null,selected:0,noCombat:9,hurtT:0,fps:60,ping:32,mmZoom:1,saveT:0,tutArise:false,ctxLost:false,lsT:0,daily:null};
+ interact:null,selected:0,noCombat:9,hurtT:0,fps:60,ping:32,mmZoom:1,saveT:0,tutArise:false,ctxLost:false,lsT:0,daily:null,
+ stance:'assault',focus:null,focusT:0};
 let inv=[],equipped={weapon:null,armor:null,ring:null,relic:null},uid=1;
 const SET={vol:.7,shake:true,filter:true,parts:1,joy:'left',muted:false};
 let view={scale:1},dpr=Math.min(1.75,window.devicePixelRatio||1);
