@@ -121,11 +121,10 @@ class CharacterRenderer {
 window.CharacterRenderer = CharacterRenderer;
 
 /*
- * Startup adapter: the game starts from the intro screen, while manifest.json
- * usually finishes loading before G.player exists. The original main.js hook
- * only attempted to create a renderer from the manifest callback, so that
- * normal race left the legacy procedural player active forever. This adapter
- * only observes gameplay state and delegates all drawing to CharacterRenderer.
+ * Runtime adapter for the existing classic-script game.
+ * Classic scripts declare G/ctx with top-level const, so they are global
+ * lexical bindings rather than window properties. Indirect global eval reads
+ * those bindings without moving game logic into this renderer.
  */
 (function(){
   const MANIFEST_URL='assets/manifest.json';
@@ -134,6 +133,16 @@ window.CharacterRenderer = CharacterRenderer;
   let renderer=null;
   let loadingId='';
   let failed=false;
+
+  function game(){
+    try{return globalThis.eval('G')}catch(e){return null}
+  }
+  function context(){
+    try{return globalThis.eval('ctx')}catch(e){
+      const canvas=document.getElementById('cv');
+      return canvas?canvas.getContext('2d'):null;
+    }
+  }
 
   const legacyDrawPlayer=window.drawPlayer;
   const legacyUpdate=window.update;
@@ -144,22 +153,27 @@ window.CharacterRenderer = CharacterRenderer;
   }
 
   function stateFor(p){
+    const g=game();
     if(p.dead)return 'death';
-    if(G.hurtT>0)return 'hurt';
+    if(g&&g.hurtT>0)return 'hurt';
     if(p.atkT>0||p.swingT>0)return 'attack';
     return p.moving?'walk':'idle';
   }
 
   async function ensureRenderer(){
-    if(failed||!manifest||!G.player)return;
-    const id=characterId(G.player);
+    const g=game();
+    if(failed||!manifest||!g||!g.player)return;
+    const id=characterId(g.player);
     if(renderer&&renderer.characterId===id)return;
     if(loadingId===id)return;
     loadingId=id;
     try{
-      const next=new CharacterRenderer(ctx,manifest,id,{scale:.34,anchorY:1,shadow:true});
+      const c=context();
+      if(!c)throw new Error('2D canvas context unavailable');
+      const next=new CharacterRenderer(c,manifest,id,{scale:.34,anchorY:1,shadow:true});
       await next.loading;
-      if(G.player&&characterId(G.player)===id)renderer=next;
+      const current=game();
+      if(current&&current.player&&characterId(current.player)===id)renderer=next;
     }catch(e){
       failed=true;
       console.warn('[CharacterRenderer] sprite load failed:',e);
@@ -169,30 +183,32 @@ window.CharacterRenderer = CharacterRenderer;
   }
 
   function sync(){
-    if(!G.player)return;
+    const g=game();
+    if(!g||!g.player)return;
     ensureRenderer();
     if(!renderer)return;
-    const state=stateFor(G.player);
+    const state=stateFor(g.player);
     if(state==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');
     else if(state==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');
     else if(state==='death'&&renderer.state!=='death')renderer.playOnce('death');
     else if(state==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');
     else if(state==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');
-    if(G.player.face!==undefined)renderer.flipX=G.player.face<0;
+    if(g.player.face!==undefined)renderer.flipX=g.player.face<0;
   }
 
   window.update=function(dt){
-    legacyUpdate(dt);
+    if(typeof legacyUpdate==='function')legacyUpdate(dt);
     sync();
     if(renderer)renderer.update(dt*1000);
   };
 
   window.drawPlayer=function(X,Y){
+    const g=game();
     if(renderer&&!failed){
-      renderer.draw({x:X,y:Y,scale:.34,alpha:G.stealth>0?.4:.98});
+      renderer.draw({x:X,y:Y,scale:.34,alpha:g&&g.stealth>0?.4:.98});
       return;
     }
-    if(legacyDrawPlayer)legacyDrawPlayer(X,Y);
+    if(typeof legacyDrawPlayer==='function')legacyDrawPlayer(X,Y);
   };
 
   fetch(MANIFEST_URL,{cache:'no-cache'}).then(r=>{
