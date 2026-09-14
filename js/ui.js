@@ -368,6 +368,21 @@ function ariseBubble(X,Y){
  ctx.fillStyle='#bfe0ff';ctx.font='700 8px Rubik';ctx.textAlign='center';ctx.textBaseline='middle';
  ctx.fillText('X',0,.5);ctx.restore();ctx.textBaseline='alphabetic';
 }
+function drawPlayerFX(X,Y){ /* v0.12.1: купол Бастиона, Отпор, ульта и стелс — вызывается и для чиби, и для спрайтов Production Kit */
+ const p=G.player,ult=G.ultiT>0;
+ if(G.bastion>0){
+  const bg=ctx.createRadialGradient(X,Y-4,6,X,Y-4,36);
+  bg.addColorStop(0,'rgba(125,211,252,.05)');bg.addColorStop(.8,'rgba(56,189,248,.20)');bg.addColorStop(1,'rgba(125,211,252,.5)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(X-32,Y+4);ctx.arc(X,Y+4,32,Math.PI,TAU);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(186,230,253,'+(.5+.3*Math.sin(G.time*6))+')';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(X,Y+4,32,9,0,0,TAU);ctx.stroke();}
+ if(p.reflect>0){
+  ctx.strokeStyle='rgba(253,224,71,.65)';ctx.lineWidth=1.6;ctx.setLineDash([5,4]);ctx.lineDashOffset=-G.time*20;
+  ctx.beginPath();ctx.ellipse(X,Y+3,19+Math.sin(G.time*9)*2.2,10+Math.sin(G.time*9)*1.2,0,0,TAU);ctx.stroke();ctx.setLineDash([])}
+ if(ult)dGl(X,Y-24,42,'#a855f7',.35+.15*Math.sin(G.time*8));
+ if(G.stealth>0){ctx.save();ctx.globalAlpha=.3+.15*Math.sin(G.time*7);ctx.strokeStyle='#93c5fd';ctx.lineWidth=1;
+  ctx.beginPath();ctx.ellipse(X,Y,17,8,0,0,TAU);ctx.stroke();ctx.restore()}
+}
 function drawPlayer(X,Y){
  const p=G.player,ult=G.ultiT>0;
  const fem=p.sex==='f'; // v0.10: женский вариант
@@ -377,18 +392,7 @@ function drawPlayer(X,Y){
  ctx.setLineDash([6,5]);ctx.lineDashOffset=G.time*14;
  ctx.beginPath();ctx.ellipse(0,0,15,7.2,0,0,TAU);ctx.stroke();
  ctx.setLineDash([]);ctx.restore();
- if(G.bastion>0){ /* v0.11: купол Бастиона */
-  const bg=ctx.createRadialGradient(X,Y-4,6,X,Y-4,36);
-  bg.addColorStop(0,'rgba(125,211,252,.05)');bg.addColorStop(.8,'rgba(56,189,248,.20)');bg.addColorStop(1,'rgba(125,211,252,.5)');
-  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(X-32,Y+4);ctx.arc(X,Y+4,32,Math.PI,TAU);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(186,230,253,'+(.5+.3*Math.sin(G.time*6))+')';ctx.lineWidth=2;
-  ctx.beginPath();ctx.ellipse(X,Y+4,32,9,0,0,TAU);ctx.stroke();}
- if(p.reflect>0){ /* v0.11: аура Отпора */
-  ctx.strokeStyle='rgba(253,224,71,.65)';ctx.lineWidth=1.6;ctx.setLineDash([5,4]);ctx.lineDashOffset=-G.time*20;
-  ctx.beginPath();ctx.ellipse(X,Y+3,19+Math.sin(G.time*9)*2.2,10+Math.sin(G.time*9)*1.2,0,0,TAU);ctx.stroke();ctx.setLineDash([])}
- if(ult)dGl(X,Y-24,42,'#a855f7',.35+.15*Math.sin(G.time*8));
- if(G.stealth>0){ctx.save();ctx.globalAlpha=.3+.15*Math.sin(G.time*7);ctx.strokeStyle='#93c5fd';ctx.lineWidth=1;
-  ctx.beginPath();ctx.ellipse(X,Y,17,8,0,0,TAU);ctx.stroke();ctx.restore()}
+ drawPlayerFX(X,Y); // v0.12.1: эффекты скиллов — единый слой (см. ниже), работает при любом рендере игрока
  // v0.10.1: плащ у героя убран — чиби читается без него
  const tilt=(p.atkT>0||p.swingT>0)?.3*clamp(p.aimY,-1,1):clamp(p.aimY,-1,1)*.18+(p.moving?.1:0); // v0.10.1: чиби-наклон
  humanoid(X,Y,{tor:'tor_'+pal,head:'head_'+pal,arm:ult?'arm_claw':'arm_hero',leg:PALS[pal].leg,legW:4.2,hs:1,hip:6,hipX:3,
