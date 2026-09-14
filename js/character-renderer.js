@@ -11,7 +11,6 @@ class CharacterRenderer {
     this.characterId = characterId;
     this.data = manifest.characters[characterId];
     if (!this.data) throw new Error(`Unknown character: ${characterId}`);
-
     this.frameW = manifest.canvas.logicalWidth;
     this.frameH = manifest.canvas.logicalHeight;
     this.state = 'idle';
@@ -39,8 +38,7 @@ class CharacterRenderer {
   }
 
   async load() {
-    const entries = Object.entries(this.data.sprites);
-    await Promise.all(entries.map(async ([state, src]) => {
+    await Promise.all(Object.entries(this.data.sprites).map(async ([state, src]) => {
       const img = await this.loadImage(src);
       const expectedFrames = this.manifest.animations[state]?.frames;
       if (!expectedFrames || img.width < expectedFrames * this.frameW || img.height < this.frameH) {
@@ -70,7 +68,8 @@ class CharacterRenderer {
     if (!anim || (this.done && !anim.loop)) return;
     this.elapsed += Math.max(0, dtMs);
     const frameTime = 1000 / anim.fps;
-    while (this.elapsed >= frameTime) {
+    const epsilon = 1e-7;
+    while (this.elapsed + epsilon >= frameTime) {
       this.elapsed -= frameTime;
       this.frame += 1;
       if (this.frame >= anim.frames) {
@@ -88,7 +87,6 @@ class CharacterRenderer {
   draw(options = {}) {
     const img = this.images[this.state];
     if (!img) return false;
-
     const ctx = this.ctx;
     const scale = options.scale ?? this.scale;
     const x = options.x ?? this.x;
@@ -103,7 +101,6 @@ class CharacterRenderer {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.imageSmoothingEnabled = false;
-
     if (this.shadow) {
       ctx.save();
       ctx.globalAlpha = 0.22 * alpha;
@@ -113,7 +110,6 @@ class CharacterRenderer {
       ctx.fill();
       ctx.restore();
     }
-
     ctx.translate(dx + (this.flipX ? dw : 0), dy);
     if (this.flipX) ctx.scale(-1, 1);
     ctx.drawImage(img, sx, 0, this.frameW, this.frameH, 0, 0, dw, dh);
