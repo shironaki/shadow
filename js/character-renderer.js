@@ -21,7 +21,7 @@ window.CharacterRenderer=CharacterRenderer;
 (function(){
   if(window.__shadowCharacterRendererInstalled)return;
   window.__shadowCharacterRendererInstalled=true;
-  const MANIFEST_URL=(typeof SET!=='undefined'&&SET.sprites==='gen')?'assets/manifest-gen.json':'assets/manifest.json',CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};let manifest=null,renderer=null,loadingId='',failed=false;
+  const MANIFEST_URL=(typeof SET!=='undefined'&&SET.sprites==='gen')?'assets/manifest-gen.json':'assets/manifest.json',CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};let manifest=null,renderer=null,loadingId='',failed=false,drawLocked=false;
   function game(){try{return globalThis.eval('G')}catch(_){return null}}
   function context(){try{return globalThis.eval('ctx')}catch(_){const cv=document.getElementById('cv');return cv?cv.getContext('2d'):null}}
   function characterId(p){return (CLASS_MAP[p.cls]||'assassin')+'_'+(p.sex==='f'?'female':'male')}
@@ -29,11 +29,11 @@ window.CharacterRenderer=CharacterRenderer;
   async function ensureRenderer(){const g=game();if(failed||!manifest||!g||!g.player)return;const id=characterId(g.player);if(renderer&&renderer.characterId===id)return;if(loadingId===id)return;loadingId=id;try{const next=new CharacterRenderer(context(),manifest,id,{scale:.34,anchorY:1,shadow:true});await next.loading;const cur=game();if(cur&&cur.player&&characterId(cur.player)===id)renderer=next}catch(e){failed=true;console.warn('[CharacterRenderer] sprite load failed:',e)}finally{if(loadingId===id)loadingId=''}}
   function sync(){const g=game();if(!g||!g.player)return;ensureRenderer();if(!renderer)return;const st=stateFor(g.player);if(st==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');else if(st==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');else if(st==='death'&&renderer.state!=='death')renderer.playOnce('death');else if(st==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');else if(st==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');if(g.player.face!==undefined)renderer.flipX=g.player.face<0}
   const legacyDrawPlayer=globalThis.eval('drawPlayer');
-  window.__shadowCharacterDraw=function(X,Y){const g=game();if(renderer&&!failed&&renderer.draw({x:X,y:Y,scale:.34,alpha:g&&g.stealth>0?.4:.98}))return;if(typeof legacyDrawPlayer==='function')legacyDrawPlayer(X,Y)};
+  window.__shadowCharacterDraw=function(X,Y){if(drawLocked)return;const g=game();if(renderer&&!failed&&renderer.draw({x:X,y:Y,scale:.34,alpha:g&&g.stealth>0?.4:.98})){drawLocked=true;return}if(typeof legacyDrawPlayer==='function'){drawLocked=true;legacyDrawPlayer(X,Y)}};
   globalThis.eval('drawPlayer=window.__shadowCharacterDraw');
   function installUpdateHook(){
     let legacyUpdate;try{legacyUpdate=globalThis.eval('update')}catch(_){return false}
-    window.__shadowCharacterUpdate=function(dt){if(typeof legacyUpdate==='function')legacyUpdate(dt);sync();if(renderer)renderer.update(dt*1000)};
+    window.__shadowCharacterUpdate=function(dt){if(typeof legacyUpdate==='function')legacyUpdate(dt);sync();if(renderer)renderer.update(dt*1000);drawLocked=false};
     globalThis.eval('update=window.__shadowCharacterUpdate');return true;
   }
   queueMicrotask(()=>{if(!installUpdateHook())setTimeout(installUpdateHook,0)});
