@@ -27,9 +27,17 @@ document.querySelectorAll('#logTabs button').forEach(b=>b.onclick=()=>{
 });
 /* — кнопки навыков/призыва (нужны SK из data.js) — */
 for(const k of['q','e','r','f','u']){
- const el=$('sk-'+k);el.insertAdjacentHTML('afterbegin',ic(SK[k].icon));
+ const el=$('sk-'+k);
  el.addEventListener('pointerdown',e=>{e.preventDefault();castSkill(k)});
 }
+function refreshSkillbar(){ /* v0.11 «Пути Силы»: набор Q/E/R/F зависит от класса героя */
+ const cls=(G.player&&G.player.cls)||'shade';
+ for(const k of['q','e','r','f']){const el=$('sk-'+k),s=skillOf(cls,k);
+  const old=el.querySelector('.ic');if(old)old.remove();
+  el.insertAdjacentHTML('afterbegin',ic(s.icon));
+  el.title=s.name+' — '+s.desc;}
+}
+refreshSkillbar();
 $('ariseBtn').addEventListener('pointerdown',e=>{e.preventDefault();castSkill('x')});
 $('swapBtn').addEventListener('pointerdown',e=>{e.preventDefault();castSkill('c')});
 $('armyBadge').onclick=()=>openModal('shadowsModal');
@@ -119,15 +127,15 @@ function renderDetail(){
 function renderSkills(){
  const p=G.player;
  let html='';
- for(const k of['q','e','r']){const s=SK[k],lv=p.skillLv[k],cost=Math.round(120*Math.pow(lv,1.6));
+ for(const k of['q','e','r','f']){const s=skillOf(p.cls,k),lv=p.skillLv[k]||1,cost=Math.round(120*Math.pow(lv,1.6));
   html+=`<div class="srow">${ic(s.icon)}<div><b>${s.name} <span class="lv">Ур. ${lv}</span></b><small>${s.desc} · КД ${s.cd}с · Мана ${s.mp}</small></div><button class="up" data-k="${k}" ${p.gold<cost?'disabled':''}>Улучшить · ${cost} з.</button></div>`;}
- for(const k of['f','u','x','c']){const s=SK[k];
+ for(const k of['u','x','c']){const s=skillOf(p.cls,k);
   html+=`<div class="srow">${ic(s.icon)}<div><b>${s.name}</b><small>${s.desc}${s.cd?` · КД ${s.cd}с`:''}${s.mp?` · Мана ${s.mp}`:''}</small></div></div>`;}
  $('skillsList').innerHTML=html;
  $('skillsList').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
   const k=b.dataset.k,p2=G.player,cost=Math.round(120*Math.pow(p2.skillLv[k],1.6));
   if(p2.gold<cost){toast('Недостаточно золота');return}
-  p2.gold-=cost;p2.skillLv[k]++;SFX.lvl();log('system',`Навык <b>${SK[k].name}</b> улучшен до Ур. ${p2.skillLv[k]}`);renderSkills();saveGame()});
+  p2.gold-=cost;p2.skillLv[k]++;SFX.lvl();log('system',`Навык <b>${skillOf(p2.cls,k).name}</b> улучшен до Ур. ${p2.skillLv[k]}`);renderSkills();saveGame()});
 }
 function renderStatus(){
  const p=G.player,r=rankOf(p.level);
@@ -369,6 +377,15 @@ function drawPlayer(X,Y){
  ctx.setLineDash([6,5]);ctx.lineDashOffset=G.time*14;
  ctx.beginPath();ctx.ellipse(0,0,15,7.2,0,0,TAU);ctx.stroke();
  ctx.setLineDash([]);ctx.restore();
+ if(G.bastion>0){ /* v0.11: купол Бастиона */
+  const bg=ctx.createRadialGradient(X,Y-4,6,X,Y-4,36);
+  bg.addColorStop(0,'rgba(125,211,252,.05)');bg.addColorStop(.8,'rgba(56,189,248,.20)');bg.addColorStop(1,'rgba(125,211,252,.5)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(X-32,Y+4);ctx.arc(X,Y+4,32,Math.PI,TAU);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(186,230,253,'+(.5+.3*Math.sin(G.time*6))+')';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(X,Y+4,32,9,0,0,TAU);ctx.stroke();}
+ if(p.reflect>0){ /* v0.11: аура Отпора */
+  ctx.strokeStyle='rgba(253,224,71,.65)';ctx.lineWidth=1.6;ctx.setLineDash([5,4]);ctx.lineDashOffset=-G.time*20;
+  ctx.beginPath();ctx.ellipse(X,Y+3,19+Math.sin(G.time*9)*2.2,10+Math.sin(G.time*9)*1.2,0,0,TAU);ctx.stroke();ctx.setLineDash([])}
  if(ult)dGl(X,Y-24,42,'#a855f7',.35+.15*Math.sin(G.time*8));
  if(G.stealth>0){ctx.save();ctx.globalAlpha=.3+.15*Math.sin(G.time*7);ctx.strokeStyle='#93c5fd';ctx.lineWidth=1;
   ctx.beginPath();ctx.ellipse(X,Y,17,8,0,0,TAU);ctx.stroke();ctx.restore()}
@@ -505,6 +522,21 @@ function drawShadow(s,X,Y){
  ctx.save();ctx.globalAlpha=al;
  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(X-w/2,y,w,2.6);
  ctx.fillStyle=s.grade>=3?GDCOL[3]:'#38bdf8';ctx.fillRect(X-w/2,y,w*clamp(s.hp/s.maxhp,0,1),2.6);
+ ctx.restore();
+}
+function drawRift(rf,X,Y){ /* v0.11: Разлом Чародея */
+ const ph=Math.min(1,rf.t/.55),fade=rf.t>rf.dur-.25?Math.max(0,(rf.dur-rf.t)/.25):1;
+ ctx.save();ctx.translate(X,Y);ctx.globalAlpha=fade;
+ ctx.fillStyle='rgba(30,10,60,.72)';
+ ctx.beginPath();ctx.ellipse(0,4,26*ph+6,12*ph+3,0,0,TAU);ctx.fill();
+ ctx.strokeStyle='#7c3aed';ctx.lineWidth=2;ctx.lineCap='round';
+ for(let i=0;i<5;i++){const a=i/5*TAU+rf.t*2.4;
+  ctx.beginPath();ctx.moveTo(0,3);
+  ctx.lineTo(Math.cos(a)*(8+17*ph),3+Math.sin(a)*(4+9*ph));ctx.stroke()}
+ if(!rf.fired){ctx.fillStyle='rgba(192,132,252,'+(.22+.18*Math.sin(G.time*12))+')';
+  ctx.beginPath();ctx.ellipse(0,3,18*ph+4,9*ph+2,0,0,TAU);ctx.fill()}
+ else{ctx.fillStyle='rgba(124,58,237,.3)';
+  ctx.beginPath();ctx.ellipse(0,3,30,15,0,0,TAU);ctx.fill()}
  ctx.restore();
 }
 function drawHand(hz,X,Y){
@@ -701,6 +733,7 @@ function render(){
  if(M.portal)push(M.portal.x,M.portal.y,()=>drawPortal(w2sx(M.portal.x,M.portal.y),w2sy(M.portal.x,M.portal.y)),.41);
  if(M.chest)push(M.chest.x,M.chest.y,()=>drawChest(w2sx(M.chest.x,M.chest.y),w2sy(M.chest.x,M.chest.y)),.42);
  for(const hz of G.hands)push(hz.x,hz.y,()=>drawHand(hz,w2sx(hz.x,hz.y),w2sy(hz.x,hz.y)),.3);
+ for(const rf of G.rifts)push(rf.x,rf.y,()=>drawRift(rf,w2sx(rf.x,rf.y),w2sy(rf.x,rf.y)),.35);
  for(const st of G.strikes)if(st.t>=0)push(st.x,st.y,()=>drawStrike(st,w2sx(st.x,st.y),w2sy(st.x,st.y)),-.15);
  for(const c2 of G.corpses)push(c2.x,c2.y,()=>drawCorpse(c2,w2sx(c2.x,c2.y),w2sy(c2.x,c2.y)),-.1);
  for(const l of G.loots)push(l.x,l.y,()=>drawLoot(l,w2sx(l.x,l.y),w2sy(l.x,l.y)),-.2);
@@ -845,8 +878,8 @@ function updateHUD(){
   let cd=el.querySelector('.cd'),ct=el.querySelector('.cdt');
   if(!cd){cd=document.createElement('div');cd.className='cd';el.appendChild(cd);
    ct=document.createElement('div');ct.className='cdt';el.appendChild(ct)}
-  const rem=p.cds[k];
-  cd.style.height=(rem/SK[k].cd*100)+'%';ct.textContent=rem>0?rem.toFixed(1):'';
+ const rem=p.cds[k],sk=skillOf(p.cls,k);
+  cd.style.height=(rem/sk.cd*100)+'%';ct.textContent=rem>0?rem.toFixed(1):'';
   if(rem<=0&&!el.classList.contains('ready')&&cache['rdy'+k]){el.classList.add('ready');setTimeout(()=>el.classList.remove('ready'),400)}
   cache['rdy'+k]=rem<=0;}
  $('uwrap').style.background=`conic-gradient(from -90deg,#a855f7 0 ${p.fury}%,rgba(255,255,255,.07) ${p.fury}% 100%)`;

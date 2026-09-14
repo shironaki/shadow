@@ -62,6 +62,7 @@ function begin(cont,name,sex,cls){
   sysNotify('СИСТЕМА',['Добро пожаловать, Охотник <b>'+G.player.name+'</b>.','Вы стали Игроком. Первые врата откроются через несколько секунд.']);}
  if(!G.quests.length)initQuests();
  if(typeof updateStanceChip==='function')updateStanceChip(); // v0.9: чип стойки по сейву
+ if(typeof refreshSkillbar==='function')refreshSkillbar(); // v0.11: скиллбар по классу героя
  ensureDaily();
  calcStats();startWorld();
  const act=activeShadows();
@@ -76,7 +77,7 @@ function begin(cont,name,sex,cls){
 $('btnRespawn').onclick=()=>{
  const p=G.player;p.dead=false;p.hp=p.maxhp*.7;p.mp=p.maxmp*.5;
  p.gold=Math.round(p.gold*.9);
- G.enemies=[];G.projs=[];G.loots=[];G.corpses=[];G.hands=[];G.strikes=[];G.whirl=null;
+ G.enemies=[];G.projs=[];G.loots=[];G.corpses=[];G.hands=[];G.strikes=[];G.whirl=null;G.rifts=[];G.bastion=0;
  G.shadows.forEach(s=>{s.hp=s.maxhp});
  // смерть возвращает в Мир; врата считаются проваленными
  startWorld();
@@ -87,7 +88,7 @@ $('btnRespawn').onclick=()=>{
 function initIntro(){
  drawPortrait();
  const sv=hasSave();
- const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
+ const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки вашего класса · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
  const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';
  $('nameWrap').style.display=sv?'none':'flex';
  const pick={sex:'m',cls:'shade'}; // v0.10: выбор пола и класса

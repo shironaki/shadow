@@ -2,14 +2,29 @@
 /* ═══ ДАННЫЕ: навыки, враги, тени, предметы, квесты, состояние игры ═══ */
 /* ДАННЫЕ */
 const SK={
- q:{name:'Вихрь Клинков',icon:'whirl',cd:5,mp:25,dmg:.85,desc:'Танец клинков: 3 вращающихся удара вокруг вас. Отравляет смертельным ядом.'},
- e:{name:'Метательные Кинжалы',icon:'daggers',cd:4,mp:20,dmg:.55,desc:'Веер из 5 кинжалов. Попадание отравляет цель.'},
- r:{name:'Рука Владыки',icon:'hand',cd:10,mp:40,dmg:2.4,desc:'Телекинез Владыки: стягивает врагов в точку, обездвиживает и сжимает взрывом.'},
- f:{name:'Шаг Сквозь Тень',icon:'step',cd:8,mp:15,dmg:0,desc:'Рывок и невидимость на 2.5с. Атака из тени — гарантированный крит (УБИЙСТВО).'},
  u:{name:'ПРОБУЖДЕНИЕ ТЕНИ',icon:'king',dur:8,desc:'Когда ярость полна — форма Владыки Теней: клыки тьмы, +35% урона, вампиризм 12%.'},
  x:{name:'АРИЗ!',icon:'ghost',mp:15,desc:'Извлечение тени из павшего врага (X / кнопка у тела). Каждый призыв качает Власть Теней.'},
  c:{name:'Обмен Тенями',icon:'swap',mp:10,cd:6,desc:'Поменяйтесь местами с ближайшей тенью в строю (C).'}
 };
+// v0.11 «Пути Силы»: у каждого класса свой набор Q/E/R/F
+const SKC={
+ shade:{
+  q:{name:'Вихрь Клинков',icon:'whirl',cd:5,mp:25,dmg:.85,desc:'Танец клинков: 3 вращающихся удара вокруг вас. Отравляет смертельным ядом.'},
+  e:{name:'Метательные Кинжалы',icon:'daggers',cd:4,mp:20,dmg:.55,desc:'Веер из 5 кинжалов. Попадание отравляет цель.'},
+  r:{name:'Рука Владыки',icon:'hand',cd:10,mp:40,dmg:2.4,desc:'Телекинез Владыки: стягивает врагов в точку, обездвиживает и сжимает взрывом.'},
+  f:{name:'Шаг Сквозь Тень',icon:'step',cd:8,mp:15,dmg:0,desc:'Рывок и невидимость на 2.5с. Атака из тени — гарантированный крит (УБИЙСТВО).'}},
+ ward:{
+  q:{name:'Сокрушающий Удар',icon:'hammer',cd:4,mp:20,dmg:2.2,desc:'Тяжёлый удар перед собой: урон ×2.2, отбрасывание и оглушение.'},
+  e:{name:'Щит-Волна',icon:'wave',cd:7,mp:35,dmg:1.1,desc:'Ударная волна вокруг: расшвыривает врагов, 3с Отпора (отражение урона).'},
+  r:{name:'Бастион',icon:'shield',cd:14,mp:30,dmg:0,desc:'4 секунды: получаемый урон −60%. Синий купол укрывает вас.'},
+  f:{name:'Натиск Щита',icon:'charge',cd:9,mp:25,dmg:1.5,desc:'Чардж вперёд: сносит врагов на пути, оглушает их.'}},
+ mage:{
+  q:{name:'Вспышка Тьмы',icon:'nova',cd:5,mp:28,dmg:1.15,desc:'Тёмная нова вокруг вас: обжигает всех вблизи.'},
+  e:{name:'Копья Тьмы',icon:'spear',cd:6,mp:32,dmg:1.3,desc:'3 пробивающих копья — каждое бьёт до 3 целей.'},
+  r:{name:'Разлом',icon:'rift',cd:12,mp:45,dmg:2.2,desc:'Разлом в точке прицела: замедляет, затем взрывается с силой ×2.2.'},
+  f:{name:'Прыжок Тени',icon:'blink',cd:7,mp:18,dmg:0,desc:'Телепорт к прицелу (до 4.5 клеток). Дешёвле и быстрее рывка.'}}
+};
+function skillOf(cls,k){return (SKC[cls]&&SKC[cls][k])||SKC.shade[k]||SK[k]}
 const STATS={str:{n:'Сила',d:'+2 атаки за очко'},agi:{n:'Ловкость',d:'+0.1 к скорости за очко'},vit:{n:'Выносливость',d:'+12 HP за очко'},int:{n:'Интеллект',d:'+8 маны, +0.5 реген/с'},per:{n:'Восприятие',d:'+1% крита, +радиус цели'}};
 const RANKS=['E','D','C','B','A','S'];
 const rankOf=l=>l<5?'E':l<10?'D':l<15?'C':l<21?'B':l<28?'A':'S';
@@ -46,7 +61,7 @@ const armyNeed=l=>5*l;
 const armyPower=()=>1+.05*((G.army?G.army.lvl:1)-1);
 const armyMax=()=>Math.min(10,2+(G.army?G.army.lvl:1));
 const G={started:false,mode:'hub',gateRank:0,gateRed:false,gateDiff:1,hubGate:null,gateT:8,
- floor:1,seed:0,time:0,paused:true,punch:0,hitstop:0,stealth:0,whirl:null,hands:[],strikes:[],cine:0,fade:0,regenT:0,
+ floor:1,seed:0,time:0,paused:true,punch:0,hitstop:0,stealth:0,whirl:null,hands:[],strikes:[],rifts:[],bastion:0,cine:0,fade:0,regenT:0,
  player:null,enemies:[],shadows:[],projs:[],loots:[],corpses:[],parts:[],texts:[],fx:[],ghosts:[],decals:[],motes:[],fogs:[],
  army:{lvl:1,cnt:0},
  cam:{x:5,y:5,shake:0},wave:{budget:0,t:2,eliteAt:0,eliteDone:true,bossPending:null},cleared:false,ultiT:0,ultiTick:0,

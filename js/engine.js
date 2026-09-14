@@ -1,6 +1,6 @@
 'use strict';
 /* ═══ SHADOW ENGINE · ядро: утилиты, звук, ввод, камера, свет, физика ═══ */
-const VER='0.10.1';
+const VER='0.11';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -65,7 +65,15 @@ const IC={
  hand:'<path d="M6.5 12V5.8a1.5 1.5 0 0 1 3 0V11h.6V4.2a1.5 1.5 0 0 1 3 0V11h.6V5.8a1.5 1.5 0 0 1 3 0v8.4c0 3.6-2.4 6.6-6 6.6-2.6 0-4-1.2-5.4-3.6l-1.7-2.9A1.6 1.6 0 0 1 6 13.4z"/>',
  king:'<path d="M3 8l4.2 4L12 5l4.8 7L21 8v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="2.6" r="1.4"/>',
  step:'<path d="M4 5l7 7-7 7V5zM12.5 5l7 7-7 7V5z"/>',
- swap:'<path d="M7 7h9l-2.5-2.5L15 3l5 4-5 4-1.5-1.5L16 9H7V7zm10 10H8l2.5 2.5L9 21l-5-4 5-4 1.5 1.5L8 15h9v2z"/>'
+ swap:'<path d="M7 7h9l-2.5-2.5L15 3l5 4-5 4-1.5-1.5L16 9H7V7zm10 10H8l2.5 2.5L9 21l-5-4 5-4 1.5 1.5L8 15h9v2z"/>',
+ hammer:'<g transform="rotate(45 12 12)"><rect x="11" y="8" width="2" height="13"/><rect x="7" y="2" width="10" height="6" rx="1.5"/></g>',
+ wave:'<path d="M12 3c3.5 4 6.5 7.2 6.5 11a6.5 6.5 0 0 1-13 0C5.5 10.2 8.5 7 12 3z" fill="none" stroke="currentColor" stroke-width="2.2"/>',
+ shield:'<path d="M12 2l8 3v6c0 5.2-3.4 9.4-8 11-4.6-1.6-8-5.8-8-11V5l8-3z"/>',
+ charge:'<path d="M3 6l6 6-6 6V6zM11 6l6 6-6 6V6z"/><rect x="19" y="5" width="2.4" height="14" rx="1.2"/>',
+ nova:'<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2L19 19M19 5l-2.8 2.8M7.8 16.2L5 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+ spear:'<g transform="rotate(-45 12 12)"><path d="M12 1l3 5h-6l3-5z"/><rect x="11" y="6" width="2" height="14"/></g>',
+ rift:'<path d="M5 4l3 5-4 3 5 3-3 5 6-2 5 3-2-6 4-3-4-3 2-6-5 3z"/>',
+ blink:'<path d="M12 3l7 9h-4v9h-6v-9H5l7-9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'
 };
 const ic=n=>`<svg class="ic" viewBox="0 0 24 24">${IC[n]||IC.gem}</svg>`;
 /* ВВОД */

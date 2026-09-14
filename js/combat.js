@@ -165,7 +165,7 @@ function castSkill(k){
  }
  if(k==='x'){tryArise();return}
  if(k==='c'){trySwap();return}
- const s=SK[k],lv=p.skillLv[k];
+ const s=skillOf(p.cls,k),lv=p.skillLv[k]||1; // v0.11: набор навыков зависит от класса (f — прокачиваемый)
  if(p.cds[k]>0){toast('Перезарядка: '+p.cds[k].toFixed(1)+' с');return}
  const cost=Math.round(s.mp*(p.cls==='mage'?.75:1)); // v0.10: Чародей
  if(p.mp<cost){toast('Недостаточно маны');SFX.ui();return}
@@ -173,18 +173,55 @@ function castSkill(k){
  const t=aimPoint();faceTo(t.x,t.y);
  const mult=s.dmg*(1+.15*(lv-1));
  G.stealth=0;
- if(k==='q'){G.whirl={t:.92,tick:0};SFX.whirl();}
- else if(k==='e'){SFX.shoot();const base=Math.atan2(t.y-p.y,t.x-p.x);
-  for(let i=-2;i<=2;i++)G.projs.push({x:p.x,y:p.y,vx:Math.cos(base+i*.2)*11.5,vy:Math.sin(base+i*.2)*11.5,t:0,life:.85,dmg:p.atk*mult,own:'p',kind:'dagger',tr:[]});}
- else if(k==='r'){SFX.hand();G.cam.shake=6;G.punch=Math.min(.6,G.punch+.25);
-  G.hands.push({x:t.x,y:t.y,t:0,dur:1.5,dmg:p.atk*mult});
-  addFx({kind:'ring',x:t.x,y:t.y,r0:2.2,r1:.4,t:0,dur:1.4,c:'#c084fc'});}
- else if(k==='f'){SFX.dash();p.dashT=.16;p.inv=.3;G.stealth=2.5;
-  const mv=moveDir();let dx,dy;
-  if(mv.l>.1){dx=mv.wx/mv.l;dy=mv.wy/mv.l}else{const a=Math.atan2(t.y-p.y,t.x-p.x);dx=Math.cos(a);dy=Math.sin(a)}
-  const l=Math.hypot(dx,dy)||1;p.dashX=dx/l*22;p.dashY=dy/l*22;
-  addFx({kind:'streak',x:p.x,y:p.y,x2:p.x+dx/l*3.4,y2:p.y+dy/l*3.4,t:0,dur:.3});
-  for(let i=0;i<3;i++)G.ghosts.push({x:p.x-dx*i*.06,y:p.y-dy*i*.06,face:p.face,t:-i*.05});}
+ if(p.cls==='ward'){ /* v0.11 «Пути Силы»: Путь Стража */
+  if(k==='q'){SFX.swing();G.cam.shake=Math.max(G.cam.shake,3);G.punch=Math.min(.6,G.punch+.12);
+   meleeArc(Math.atan2(t.y-p.y,t.x-p.x),2.35,1.05,mult,{kb:1.2,stun:.7,c1:'rgba(96,165,250,.5)',c2:'#bfdbfe',dur:.24})}
+  else if(k==='e'){SFX.nova();G.cam.shake=Math.max(G.cam.shake,4);p.reflect=3;
+   addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:2.7,t:0,dur:.35,c:'#60a5fa'});burst(p.x,p.y,16,'#93c5fd',3.5);
+   spawnText(p.x,p.y-1,'ОТПОР','#93c5fd',true);hitOres(p.x,p.y,2.4);
+   for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,p.x,p.y)<2.7+e.r)hitEnemy(e,p.atk*mult,{kb:1.7,stun:.3,src:'p',ang:Math.atan2(e.y-p.y,e.x-p.x)})}}
+  else if(k==='r'){SFX.ulti();G.bastion=4;G.cam.shake=Math.max(G.cam.shake,3);
+   addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:2.4,t:0,dur:.5,c:'#38bdf8'});burst(p.x,p.y,22,'#60a5fa',4);
+   spawnText(p.x,p.y-1,'БАСТИОН','#7dd3fc',true)}
+  else if(k==='f'){SFX.dash();G.cam.shake=Math.max(G.cam.shake,2);
+   const a=Math.atan2(t.y-p.y,t.x-p.x);p.dashT=.34;p.inv=.35;p.dashX=Math.cos(a)*24;p.dashY=Math.sin(a)*24;
+   p.chargeId=(G.chargeId=(G.chargeId||0)+1);p.chargeDmg=mult; // враги на пути — в updatePlayer
+   addFx({kind:'streak',x:p.x,y:p.y,x2:p.x+Math.cos(a)*3.4,y2:p.y+Math.sin(a)*3.4,t:0,dur:.3});
+   for(let i=0;i<3;i++)G.ghosts.push({x:p.x-Math.cos(a)*i*.08,y:p.y-Math.sin(a)*i*.08,face:p.face,t:-i*.05})}
+ }
+ else if(p.cls==='mage'){ /* Путь Чародея */
+  if(k==='q'){SFX.nova();G.cam.shake=Math.max(G.cam.shake,3);G.punch=Math.min(.6,G.punch+.12);
+   addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:2.5,t:0,dur:.3,c:'#a855f7'});burst(p.x,p.y,20,'#8b5cf6',4);hitOres(p.x,p.y,2.2);
+   for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,p.x,p.y)<2.5+e.r)hitEnemy(e,p.atk*mult,{kb:.5,src:'p'})}}
+  else if(k==='e'){SFX.shoot();const base=Math.atan2(t.y-p.y,t.x-p.x);
+   for(let i=-1;i<=1;i++)G.projs.push({x:p.x,y:p.y,vx:Math.cos(base+i*.13)*14,vy:Math.sin(base+i*.13)*14,t:0,life:1,dmg:p.atk*mult,own:'p',kind:'spear',pierce:3,hits:[],tr:[]});
+   addFx({kind:'ring',x:p.x,y:p.y,r0:.2,r1:1.2,t:0,dur:.2,c:'#8b5cf6'})}
+  else if(k==='r'){SFX.hand();G.cam.shake=Math.max(G.cam.shake,2);
+   G.rifts.push({x:t.x,y:t.y,t:0,dur:1.25,fired:false,dmg:p.atk*mult});
+   addFx({kind:'ring',x:t.x,y:t.y,r0:1.6,r1:.3,t:0,dur:.5,c:'#7c3aed'});spawnText(t.x,t.y-.8,'РАЗЛОМ','#c084fc')}
+  else if(k==='f'){SFX.dash();G.punch=Math.min(.6,G.punch+.1);
+   let dx=t.x-p.x,dy=t.y-p.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+   const reach=Math.min(4.5,l);let nx=p.x+dx*reach,ny=p.y+dy*reach;
+   for(let s=reach;s>.4;s-=.3){const tx=p.x+dx*s,ty=p.y+dy*s;if(!circleBlocked(tx,ty,p.r)){nx=tx;ny=ty;break}}
+   for(let i=0;i<4;i++)G.ghosts.push({x:p.x+dx*i*.3,y:p.y+dy*i*.3,face:p.face,t:-i*.04});
+   burst(p.x,p.y,10,'#c084fc',3);
+   p.x=nx;p.y=ny;p.inv=.25;
+   burst(nx,ny,12,'#a855f7',3);addFx({kind:'ring',x:nx,y:ny,r0:.2,r1:1.6,t:0,dur:.3,c:'#c084fc'})}
+ }
+ else{ /* Путь Тени — исходные навыки */
+  if(k==='q'){G.whirl={t:.92,tick:0};SFX.whirl();}
+  else if(k==='e'){SFX.shoot();const base=Math.atan2(t.y-p.y,t.x-p.x);
+   for(let i=-2;i<=2;i++)G.projs.push({x:p.x,y:p.y,vx:Math.cos(base+i*.2)*11.5,vy:Math.sin(base+i*.2)*11.5,t:0,life:.85,dmg:p.atk*mult,own:'p',kind:'dagger',tr:[]});}
+  else if(k==='r'){SFX.hand();G.cam.shake=6;G.punch=Math.min(.6,G.punch+.25);
+   G.hands.push({x:t.x,y:t.y,t:0,dur:1.5,dmg:p.atk*mult});
+   addFx({kind:'ring',x:t.x,y:t.y,r0:2.2,r1:.4,t:0,dur:1.4,c:'#c084fc'});}
+  else if(k==='f'){SFX.dash();p.dashT=.16;p.inv=.3;G.stealth=2.5;
+   const mv=moveDir();let dx,dy;
+   if(mv.l>.1){dx=mv.wx/mv.l;dy=mv.wy/mv.l}else{const a=Math.atan2(t.y-p.y,t.x-p.x);dx=Math.cos(a);dy=Math.sin(a)}
+   const l=Math.hypot(dx,dy)||1;p.dashX=dx/l*22;p.dashY=dy/l*22;
+   addFx({kind:'streak',x:p.x,y:p.y,x2:p.x+dx/l*3.4,y2:p.y+dy/l*3.4,t:0,dur:.3});
+   for(let i=0;i<3;i++)G.ghosts.push({x:p.x-dx*i*.06,y:p.y-dy*i*.06,face:p.face,t:-i*.05});}
+ }
 }
 function tryArise(){
  const p=G.player;if(p.dead)return;
@@ -283,12 +320,18 @@ function update(dt){
  G.fade=Math.max(0,G.fade-dt*2);
  if(G.cine>0){G.cine-=dt;if(G.cine<=0)document.body.classList.remove('cine')}
  if(G.stealth>0){G.stealth-=dt;if(Math.random()<dt*8)G.ghosts.push({x:p.x,y:p.y,face:p.face,t:0})}
+ if(G.bastion>0)G.bastion-=dt; // v0.11: Бастион
+ if(p.reflect>0)p.reflect-=dt; // v0.11: Отпор
  const md=moveDir();
  p.moving=md.l>.05||p.dashT>0;
  let sp=p.spd*(G.ultiT>0?1.3:1);
  if(G.stealth>0)sp*=1.3;
  if(G.whirl)sp*=1.2;
  if(p.dashT>0){p.dashT-=dt;collideMove(p,p.dashX*dt,p.dashY*dt);
+  if(p.chargeId){for(const e of G.enemies){if(e.dead||e.chg===p.chargeId)continue; // v0.11: Натиск Щита
+   if(dist(e.x,e.y,p.x,p.y)<e.r+1.25){e.chg=p.chargeId;
+    hitEnemy(e,p.atk*p.chargeDmg,{kb:1,stun:.8,src:'p',ang:Math.atan2(e.y-p.y,e.x-p.x)});
+    G.cam.shake=Math.max(G.cam.shake,3);burst(e.x,e.y,8,'#93c5fd',3)}}}
   if(Math.random()<.6)G.ghosts.push({x:p.x,y:p.y,face:p.face,t:0});}
  else{p.vx=lerp(p.vx,md.wx*sp*md.l,1-Math.exp(-12*dt));p.vy=lerp(p.vy,md.wy*sp*md.l,1-Math.exp(-12*dt));
   collideMove(p,p.vx*dt,p.vy*dt);}
@@ -321,6 +364,16 @@ function update(dt){
    for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,hz.x,hz.y)<3.2)hitEnemy(e,hz.dmg,{kb:.4})}
    G.hands.splice(i,1);}
  }
+ for(let i=G.rifts.length-1;i>=0;i--){const rf=G.rifts[i];rf.t+=dt; // v0.11: Разлом Чародея
+  if(!rf.fired){ // до взрыва — стягивает и вязнет врагов
+   for(const e of G.enemies){if(e.dead)continue;const d=dist(e.x,e.y,rf.x,rf.y);
+    if(d<2.6){const dd=d||1;collideMove(e,(rf.x-e.x)/dd*3.2*dt,(rf.y-e.y)/dd*3.2*dt);e.stun=Math.max(e.stun,.15)}}}
+  if(SET.parts&&Math.random()<dt*30){const a=rand(TAU),r=rand(.4,1.6);
+   addPart(rf.x+Math.cos(a)*r,rf.y+Math.sin(a)*r*.5,rand(3,14),0,-1.2,rand(1,2.5),.5,1.5,'#7c3aed')}
+  if(rf.t>=.55&&!rf.fired){rf.fired=true;SFX.nova();G.cam.shake=Math.max(G.cam.shake,5);G.punch=Math.min(.6,G.punch+.2);
+   addFx({kind:'ring',x:rf.x,y:rf.y,r0:.3,r1:2.6,t:0,dur:.4,c:'#c084fc'});burst(rf.x,rf.y,24,'#7c3aed',4.5);
+   for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,rf.x,rf.y)<2.3)hitEnemy(e,rf.dmg,{kb:.6,stun:.4,src:'p'})}}
+  if(rf.t>=rf.dur)G.rifts.splice(i,1)}
  for(let i=G.strikes.length-1;i>=0;i--){const s2=G.strikes[i];s2.t+=dt;
   if(s2.t>=s2.dur){
    addFx({kind:'bolt',x1:s2.x+.8,y1:s2.y-6,x2:s2.x,y2:s2.y,t:0,dur:.22,seed:Math.random()*9});
@@ -454,7 +507,14 @@ function update(dt){
   if(SET.parts&&Math.random()<.5)addPart(pr.x,pr.y,10,rand(-.5,.5),rand(-.5,.5),rand(.5,2),.3,pr.kind==='dagger'?1.6:2.2,pr.kind==='fire'?'#fb923c':pr.kind==='dagger'?'#84cc16':pr.kind==='ebolt'?'#f87171':'#7dd3fc');
   let kill=pr.t>pr.life||blocked(pr.x|0,pr.y|0);
   if(!kill){
-   if(pr.own==='p'||pr.own==='s'){for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,pr.x,pr.y)<e.r+.18){
+   if(pr.kind==='spear'&&pr.own==='p'){ // v0.11: Копья Тьмы пробивают до 3 целей
+    let gone=false;
+    for(const e of G.enemies){if(e.dead||pr.hits.indexOf(e)>=0)continue;
+     if(dist(e.x,e.y,pr.x,pr.y)<e.r+.18){pr.hits.push(e);
+      hitEnemy(e,pr.dmg,{kb:.25,src:'p',ang:Math.atan2(pr.vy,pr.vx)});
+      if(--pr.pierce<=0){gone=true;break}}}
+    if(gone){burst(pr.x,pr.y,6,'#a78bfa',2);G.projs.splice(i,1);continue}}
+   else if(pr.own==='p'||pr.own==='s'){for(const e of G.enemies){if(!e.dead&&dist(e.x,e.y,pr.x,pr.y)<e.r+.18){
     hitEnemy(e,pr.dmg,{kb:.2,src:pr.own==='s'?'shadow':'p',ang:Math.atan2(pr.vy,pr.vx)});
     if(pr.kind==='dagger'&&pr.own==='p'&&!e.dead)applyPoison(e,G.player.atk*.14);
     kill=true;break}}}
@@ -531,11 +591,17 @@ for(let i=G.loots.length-1;i>=0;i--){const L=G.loots[i];L.t+=dt;
 function hurtPlayer(dmg){
  const p=G.player;if(p.dead||p.inv>0)return;
  if(p.cls==='ward')dmg*=.82; // v0.10: Страж
+ if(G.bastion>0)dmg*=.4; // v0.11: Бастион Стража
  dmg=Math.round(dmg*rand(.9,1.1));p.hp-=dmg;G.noCombat=0;G.hurtT=1;addFury(6);G.punch=Math.min(.5,G.punch+.12);
  G.stealth=0;
- spawnText(p.x,p.y,'-'+dmg,'#f87171',false);SFX.hurt();
+ spawnText(p.x,p.y,(G.bastion>0?'⛨ ':'')+'-'+dmg,G.bastion>0?'#93c5fd':'#f87171',false);SFX.hurt();
  if(SET.shake)G.cam.shake=Math.max(G.cam.shake,4);
- burst(p.x,p.y,8,'#ef4444',2.5);
+ burst(p.x,p.y,8,G.bastion>0?'#60a5fa':'#ef4444',2.5);
+ if(p.reflect>0){let ne=null,bd=2.9; // v0.11: Отпор — отражение урона ближайшему врагу
+  for(const e of G.enemies){if(e.dead)continue;const d=dist(e.x,e.y,p.x,p.y);if(d<bd){bd=d;ne=e}}
+  if(ne){hitEnemy(ne,Math.max(1,Math.round(dmg*1.6)),{src:'p',kb:.5,ang:Math.atan2(ne.y-p.y,ne.x-p.x)});
+   spawnText(ne.x,ne.y-.6,'отпор '+Math.max(1,Math.round(dmg*1.6)),'#fde047');
+   addFx({kind:'ring',x:p.x,y:p.y,r0:.3,r1:1.3,t:0,dur:.25,c:'#fde047'})}}
  if(p.hp<=0){p.hp=0;p.dead=true;G.ultiT=0;G.whirl=null;SFX.die();
   $('deathSub').textContent=`ЗАЧИЩЕНО ВРАТ: ${G.counters.gates} · УБИТО: ${G.counters.kills}`;
   $('deathOv').style.display='flex';saveGame();}
