@@ -3,7 +3,10 @@
 ═══════════════════════════════════════════════════════════════════
  ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.12 «Ясность»
  ─────────────────────────────────────────────────────────────────
- v0.12 — ТЕКУЩАЯ. ЯСНОСТЬ БОЯ: телеграф атак (замах «!» + метка слэма
+ v0.12.3 — ДВА НАБОРА СПРАЙТОВ ГЕРОЯ: ваши (Production Kit, assets/
+   characters) и ИИ-генерация (assets/characters-gen) — переключатель
+   в настройках; FIX: import-путь рендерера (был 404 от корня страницы).
+ v0.12 — ЯСНОСТЬ БОЯ: телеграф атак (замах «!» + метка слэма
    на земле), лут-лучи над дропом, голова Soul Knight (яйцевидный
    череп, веки и блики в глазах, брови, ушки, объёмная чёлка с
    бликом); ФИКС @16: addColorStop(undefined) у Брута/Камиша —
@@ -422,7 +425,8 @@ body.cine #lbT,body.cine #lbB{height:9vh}
   <div class="setrow"><span>Громкость</span><span><input type="range" id="volR" min="0" max="100" value="70"> <b id="volV">70%</b></span></div>
   <div class="setrow"><span>Тряска экрана</span><input type="checkbox" id="chkShake" checked></div>
   <div class="setrow"><span>Пост-фильтр</span><input type="checkbox" id="chkFilter" checked></div>
-  <div class="setrow"><span>Частицы</span><select id="selPart"><option value="1">Высокие</option><option value="0">Низкие</option></select></div>
+  <div class="setrow"><span>Спрайты героя</span><select id="selSprites"><option value="user">Ваши (Production Kit)</option><option value="gen">ИИ-генерация</option></select></div>
+ <div class="setrow"><span>Частицы</span><select id="selPart"><option value="1">Высокие</option><option value="0">Низкие</option></select></div>
   <div class="setrow"><span>Джойстик</span><select id="selJoy"><option value="left">Слева</option><option value="right">Справа</option></select></div>
   <div class="pp" id="passportBox"></div>
   <button class="danger" id="btnReset">Сбросить весь прогресс</button>
@@ -449,13 +453,13 @@ body.cine #lbT,body.cine #lbB{height:9vh}
   <button class="ibtn" id="btnRespawn">ВОЗРОДИТЬСЯ</button>
 </div>
 
-<script src="js/engine.js?v=0.12.2"></script>
-<script src="js/data.js?v=0.12.2"></script>
-<script src="js/world.js?v=0.12.2"></script>
-<script src="js/sprites.js?v=0.12.2"></script>
-<script src="js/entities.js?v=0.12.2"></script>
-<script src="js/shadows.js?v=0.12.2"></script>
-<script src="js/combat.js?v=0.12.2"></script>
-<script src="js/ui.js?v=0.12.2"></script>
-<script src="js/main.js?v=0.12.2"></script></body>
+<script src="js/engine.js?v=0.12.3"></script>
+<script src="js/data.js?v=0.12.3"></script>
+<script src="js/world.js?v=0.12.3"></script>
+<script src="js/sprites.js?v=0.12.3"></script>
+<script src="js/entities.js?v=0.12.3"></script>
+<script src="js/shadows.js?v=0.12.3"></script>
+<script src="js/combat.js?v=0.12.3"></script>
+<script src="js/ui.js?v=0.12.3"></script>
+<script src="js/main.js?v=0.12.3"></script></body>
 </html>

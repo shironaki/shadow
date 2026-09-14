@@ -21,7 +21,7 @@ window.CharacterRenderer=CharacterRenderer;
 (function(){
   if(window.__shadowCharacterRendererInstalled)return;
   window.__shadowCharacterRendererInstalled=true;
-  const MANIFEST_URL='assets/manifest.json',CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};let manifest=null,renderer=null,loadingId='',failed=false;
+  const MANIFEST_URL=(typeof SET!=='undefined'&&SET.sprites==='gen')?'assets/manifest-gen.json':'assets/manifest.json',CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};let manifest=null,renderer=null,loadingId='',failed=false;
   function game(){try{return globalThis.eval('G')}catch(_){return null}}
   function context(){try{return globalThis.eval('ctx')}catch(_){const cv=document.getElementById('cv');return cv?cv.getContext('2d'):null}}
   function characterId(p){return (CLASS_MAP[p.cls]||'assassin')+'_'+(p.sex==='f'?'female':'male')}

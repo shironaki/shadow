@@ -69,7 +69,7 @@ const G={started:false,mode:'hub',gateRank:0,gateRed:false,gateDiff:1,hubGate:nu
  interact:null,selected:0,noCombat:9,hurtT:0,fps:60,ping:32,mmZoom:1,saveT:0,tutArise:false,ctxLost:false,lsT:0,daily:null,
  stance:'assault',focus:null,focusT:0};
 let inv=[],equipped={weapon:null,armor:null,ring:null,relic:null},uid=1;
-const SET={vol:.7,shake:true,filter:true,parts:1,joy:'left',muted:false};
+const SET={vol:.7,shake:true,filter:true,parts:1,joy:'left',muted:false,sprites:'user'}; /* v0.12.3: 'user'|'gen' — набор спрайтов героя */
 let view={scale:1},dpr=Math.min(1.75,window.devicePixelRatio||1);
 /* ЕЖЕДНЕВНЫЙ КВЕСТ */
 function ensureDaily(){const t=todayStr();if(!G.daily||G.daily.d!==t)G.daily={d:t,kills:0,summons:0,elites:0,gates:0,done:false}}

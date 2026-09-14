@@ -1,0 +1,79 @@
+{
+  "canvas": {
+    "logicalWidth": 128,
+    "logicalHeight": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true
+    },
+    "walk": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true
+    },
+    "attack": {
+      "frames": 6,
+      "fps": 16,
+      "loop": false
+    },
+    "hurt": {
+      "frames": 4,
+      "fps": 12,
+      "loop": false
+    },
+    "death": {
+      "frames": 8,
+      "fps": 10,
+      "loop": false
+    }
+  },
+  "characters": {
+    "warrior_male": {
+      "class": "warrior",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters-gen/warrior/male/idle.png",
+        "walk": "assets/characters-gen/warrior/male/walk.png",
+        "attack": "assets/characters-gen/warrior/male/attack.png",
+        "hurt": "assets/characters-gen/warrior/male/hurt.png",
+        "death": "assets/characters-gen/warrior/male/death.png"
+      }
+    },
+    "warrior_female": {
+      "class": "warrior",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters-gen/warrior/female/idle.png",
+        "walk": "assets/characters-gen/warrior/female/walk.png",
+        "attack": "assets/characters-gen/warrior/female/attack.png",
+        "hurt": "assets/characters-gen/warrior/female/hurt.png",
+        "death": "assets/characters-gen/warrior/female/death.png"
+      }
+    },
+    "mage_male": {
+      "class": "mage",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters-gen/mage/male/idle.png",
+        "walk": "assets/characters-gen/mage/male/walk.png",
+        "attack": "assets/characters-gen/mage/male/attack.png",
+        "hurt": "assets/characters-gen/mage/male/hurt.png",
+        "death": "assets/characters-gen/mage/male/death.png"
+      }
+    },
+    "mage_female": {
+      "class": "mage",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters-gen/mage/female/idle.png",
+        "walk": "assets/characters-gen/mage/female/walk.png",
+        "attack": "assets/characters-gen/mage/female/attack.png",
+        "hurt": "assets/characters-gen/mage/female/hurt.png",
+        "death": "assets/characters-gen/mage/female/death.png"
+      }
+    }
+  }
+}
