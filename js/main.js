@@ -65,6 +65,7 @@ initIntro();requestAnimationFrame(loop);addEventListener('beforeunload',()=>{if(
   let manifest=null, renderer=null, characterKey='';
   let legacyDrawPlayer=window.drawPlayer;
   let loadFailed=false;
+  const rendererReady=import('./character-renderer.js').catch(e=>{loadFailed=true;console.warn('[CharacterRenderer] script load failed:',e)});
 
   function characterId(p){
     const cls=CLASS_MAP[p.cls]||'assassin';
@@ -98,7 +99,9 @@ initIntro();requestAnimationFrame(loop);addEventListener('beforeunload',()=>{if(
   }
 
   async function loadCharacter(id){
-    if(!manifest||typeof CharacterRenderer!=='function')return;
+    if(!manifest)return;
+    await rendererReady;
+    if(loadFailed||typeof CharacterRenderer!=='function')return;
     try{
       const next=new CharacterRenderer(ctx,manifest,id,{scale:.34,anchorY:1,shadow:true});
       await next.loading;
