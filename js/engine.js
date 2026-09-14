@@ -111,7 +111,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>input.keys.delete(e.code));
 const cvs=$('cv'),ctx=cvs.getContext('2d');
 function screenToWorld(mx,my){
- if(!M.grid)return{x:0,y:0};
+ if(typeof M==='undefined'||!M.grid)return{x:0,y:0}; // v0.12.2: FIX «M is not defined» — мышь до загрузки world.js
  const VS=zscale();
  const csx=w2sx(G.cam.x,G.cam.y),csy=w2sy(G.cam.x,G.cam.y);
  const u=(mx-innerWidth/2)/VS+csx,v=(my-innerHeight/2)/VS+csy;
