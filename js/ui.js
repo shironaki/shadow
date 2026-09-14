@@ -442,6 +442,23 @@ function mageDraw(X,Y,o){
 const BARY={hound:30,mage:46,soldier:52,brute:62,knight:58,igirs:60,baran:64,kamish:74,bel:96,beru:88}; // v0.10.1: чиби
 function drawEnemy(e,X,Y){
  const windP=e.wind>0?1-e.wind/e.windMax:0;
+ if(e.wind>0&&e.windMax>0){ /* v0.12: телеграф атаки — читай врага, уклоняйся */
+  if(e.slamX!==undefined){ /* слэм: метка на земле в точке удара */
+   const sx=w2sx(e.slamX,e.slamY),sy=w2sy(e.slamX,e.slamY);
+   ctx.save();ctx.strokeStyle=`rgba(239,68,68,${.3+.6*windP})`;ctx.lineWidth=2.4;
+   ctx.beginPath();ctx.ellipse(sx,sy,10+16*windP,(10+16*windP)*.48,0,0,TAU);ctx.stroke();
+   ctx.fillStyle=`rgba(239,68,68,${.08+.14*windP})`;ctx.fill();ctx.restore();
+  }else{ /* замах: «!» над головой, зреет от жёлтого к красному */
+   const ty=Y-(BARY[e.type]||44)-12+Math.sin(G.time*10)*1.5;
+   ctx.save();ctx.translate(X,ty);const s=.85+.25*Math.sin(G.time*13);
+   ctx.scale(s,s);
+   ctx.fillStyle=windP>.7?'#ef4444':'#fbbf24';
+   ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(6.6,4.5);ctx.lineTo(-6.6,4.5);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1;ctx.stroke();
+   ctx.fillStyle='#221307';ctx.fillRect(-1.1,-3.8,2.2,4.6);
+   ctx.beginPath();ctx.arc(0,2.6,1.1,0,TAU);ctx.fill();ctx.restore();
+  }
+ }
  const swingP=e.swingT>0?1-e.swingT/.2:null;
  const etilt=e.wind>0?-.26*windP:swingP!=null?.3*swingP:(e.mv?.08:0); // v0.10.1: чиби-наклоны мягче
  if(e.poison){ctx.save();ctx.globalAlpha=.5;ctx.strokeStyle='#84cc16';ctx.lineWidth=1;
@@ -670,6 +687,17 @@ function drawCrystalDec(cr,X,Y){
  lights.push({x:cr.x,y:cr.y,r:3.5,i:.45});
 }
 function drawLoot(L,X,Y){
+ /* v0.12: лут-луч — столб света, видно дроп издалека (Soul Knight) */
+ const beamC=L.kind==='gold'?'251,191,36':L.kind==='gem'?'129,140,248':L.kind==='crystalQ'?'52,211,153':
+  L.kind==='relic'?'251,191,36':L.kind==='potionHP'?'239,68,68':L.kind==='potionMP'?'56,189,248':
+  L.kind==='item'?'167,139,250':'167,139,250';
+ const beamH=L.kind==='gold'||L.kind==='gem'?26:L.kind==='item'||L.kind==='relic'||L.kind==='crystalQ'?44:32;
+ ctx.save();
+ const bg=ctx.createLinearGradient(0,-beamH,0,4);
+ bg.addColorStop(0,'rgba('+beamC+',0)');bg.addColorStop(.7,'rgba('+beamC+',.16)');bg.addColorStop(1,'rgba('+beamC+',.4)');
+ ctx.fillStyle=bg;ctx.fillRect(-6.5,-beamH,13,beamH+4);
+ ctx.fillStyle='rgba('+beamC+',.5)';ctx.beginPath();ctx.ellipse(0,3,10,3.4,0,0,TAU);ctx.fill();
+ ctx.restore();
  ctx.save();ctx.translate(X,Y);const bob=Math.sin(G.time*4+L.x*7)*2;
  ctx.translate(0,-4+bob);
  if(L.kind==='gold'){ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.ellipse(0,0,3.4*Math.abs(Math.sin(G.time*3+L.y*5))+1,3.4,0,0,TAU);ctx.fill()}

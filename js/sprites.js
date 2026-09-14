@@ -7,8 +7,8 @@ const PALS={
  sol:{armA:'#4a151f',armB:'#2b0c12',plate:'#4d4656',plateHi:'#767086',eye:'#ff5d5d',horn:'#cfc7d6',leg:'#200a10',bladeA:'#cdd2de',bladeB:'#8a93a6'},
  shs:{armA:'#12244d',armB:'#0a1530',plate:'#2c4c80',plateHi:'#4a7cc0',eye:'#7dd3fc',horn:'#93c5fd',leg:'#0a1530',bladeA:'#dbeafe',bladeB:'#60a5fa'},
  kn:{armA:'#252b3a',armB:'#131724',plate:'#3b445e',plateHi:'#5b688a',eye:'#a5f3fc',cryst:'#7dd3fc',horn:'#93a7c9',leg:'#10141f',bladeA:'#e0f2fe',bladeB:'#38bdf8'},
- brt:{armA:'#45101a',armB:'#25070e',plate:'#433d44',eye:'#ff4d4d',horn:'#d6d3d1',leg:'#1c070c'},
- kam:{armA:'#571c10',armB:'#2b0d06',plate:'#5b3a2a',eye:'#ffb347',horn:'#e7d3b0',leg:'#200b05'},
+ brt:{armA:'#45101a',armB:'#25070e',plate:'#433d44',plateHi:'#6b625f',eye:'#ff4d4d',horn:'#d6d3d1',leg:'#1c070c'},
+ kam:{armA:'#571c10',armB:'#2b0d06',plate:'#5b3a2a',plateHi:'#8a5c3d',eye:'#ffb347',horn:'#e7d3b0',leg:'#200b05'},
  mg:{robeA:'#341021',robeB:'#180610',trim:'#f59e0b',eye:'#fbbf24',orb:'#fbbf24'},
  shm:{robeA:'#12244d',robeB:'#0a1530',trim:'#60a5fa',eye:'#93c5fd',orb:'#7dd3fc'},
  bar:{robeA:'#3b0a47',robeB:'#1d0526',trim:'#f0abfc',eye:'#f0abfc',orb:'#e879f9'},
@@ -91,38 +91,64 @@ function torsoChibi(g,p,kind){
   }
  }
 }
+function skull(g){ // v0.12: череп Soul Knight — округлый купол, мягкий подбородок (не шар)
+ g.beginPath();
+ g.moveTo(-10.8,-13.6);
+ g.quadraticCurveTo(-11.9,-24.8,0,-26);
+ g.quadraticCurveTo(11.9,-24.8,10.8,-13.6);
+ g.quadraticCurveTo(10.4,-7.2,5.4,-5);
+ g.quadraticCurveTo(0,-3.7,-5.4,-5);
+ g.quadraticCurveTo(-10.4,-7.2,-10.8,-13.6);
+ g.closePath();
+}
 function headChibi(g,p,style){
- // v0.10.1: ЧИБИ-голова — большой круг, огромные глаза
+ // v0.12: ЧИБИ-голова в духе Soul Knight — яйцевидный череп, веки, блики, ушки
  const face=(p.skin)||'#cdd3e0';
- g.fillStyle=face;g.fillRect(-1.8,-4.6,3.6,4.6);
- g.beginPath();g.arc(0,-14.5,11.6,0,TAU);
- g.fillStyle=lgg(g,-9,-23,8,-6,[[0,style==='helm'||style==='crown'||style==='ant'?p.plateHi||'#dbe3f0':face],[1,style==='helm'||style==='crown'||style==='ant'?p.plate||'#aab4c8':face]]);g.fill();
- g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=1;g.stroke();
+ g.fillStyle=face;g.fillRect(-1.8,-4.6,3.6,4.6); // шея
+ // ушки (только «волосатые» стили)
+ if(style==='hair'||style==='hairF'){
+  g.fillStyle=lgg(g,-11,-13,-9,-9,[[0,face],[1,'#d9a97e'===face?'#d9a97e':'#e3b68c']]);
+  g.beginPath();g.ellipse(-10.9,-11.2,1.7,2.4,-.3,0,TAU);g.fill();
+  g.beginPath();g.ellipse(10.9,-11.2,1.7,2.4,.3,0,TAU);g.fill();
+  g.strokeStyle='rgba(0,0,0,.4)';g.lineWidth=.8;g.stroke();
+ }
+ skull(g);
+ g.fillStyle=lgg(g,-9,-24,8,-5,[[0,style==='helm'||style==='crown'||style==='ant'?p.plateHi||'#dbe3f0':face],[1,style==='helm'||style==='crown'||style==='ant'?p.plate||'#aab4c8':face]]);g.fill();
+ g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=1.1;g.stroke();
  // щёчки
- if(style==='hair'||style==='hairF'){g.fillStyle='rgba(230,120,140,.25)';
-  g.beginPath();g.ellipse(-6.6,-10.4,2.2,1.4,0,0,TAU);g.ellipse(6.6,-10.4,2.2,1.4,0,0,TAU);g.fill()}
- // глаза-блюдца с бликом
- for(const ex of[-4.6,4.6]){
-  g.save();g.shadowColor=p.eye;g.shadowBlur=4;
-  g.fillStyle='#f8f6ff';g.beginPath();g.ellipse(ex,-12,3.4,4,0,0,TAU);g.fill();g.restore();
-  g.fillStyle=p.eye||'#7dd3fc';g.beginPath();g.ellipse(ex,-11.7,2.2,3,0,0,TAU);g.fill();
-  g.fillStyle='#0c0a18';g.beginPath();g.ellipse(ex+(p.eyeDir?0:0),-11.7,1.05,1.9,0,0,TAU);g.fill();
-  g.fillStyle='#fff';g.beginPath();g.arc(ex+1,-13.4,1,0,TAU);g.fill();
+ if(style==='hair'||style==='hairF'){g.fillStyle='rgba(235,110,140,'+(style==='hairF'?.3:.2)+')';
+  g.beginPath();g.ellipse(-6.4,-9.8,2.1,1.3,0,0,TAU);g.ellipse(6.4,-9.8,2.1,1.3,0,0,TAU);g.fill()}
+ // глаза: белок + радужка + зрачок + двойной блик + веко
+ for(const ex of[-4.5,4.5]){
+  g.fillStyle='#f6f4ff';g.beginPath();g.ellipse(ex,-11.8,3.1,3.7,0,0,TAU);g.fill();
+  g.fillStyle=p.eye||'#7dd3fc';g.beginPath();g.ellipse(ex,-11.4,2.05,2.75,0,0,TAU);g.fill();
+  g.fillStyle='#120f22';g.beginPath();g.ellipse(ex,-11.3,1,1.85,0,0,TAU);g.fill();
+  g.fillStyle='rgba(255,255,255,.95)';g.beginPath();g.arc(ex+.85,-12.9,.85,0,TAU);g.fill();
+  g.fillStyle='rgba(255,255,255,.5)';g.beginPath();g.arc(ex-.75,-10.1,.42,0,TAU);g.fill();
+  g.strokeStyle='rgba(18,14,38,.6)';g.lineWidth=1.1;g.lineCap='round';
+  g.beginPath();g.moveTo(ex-2.7,-13.9);g.quadraticCurveTo(ex,-15.3,ex+2.7,-13.9);g.stroke();
  }
+ // брови — герой
+ if(style==='hair'){g.strokeStyle='rgba(22,19,43,.8)';g.lineWidth=1.3;g.lineCap='round';
+  g.beginPath();g.moveTo(-6.6,-16.6);g.lineTo(-2.6,-17.2);g.stroke();
+  g.beginPath();g.moveTo(6.6,-16.6);g.lineTo(2.6,-17.2);g.stroke()}
  // ротик
- g.strokeStyle='rgba(60,30,40,.6)';g.lineWidth=1.1;g.lineCap='round';
- g.beginPath();g.moveTo(-1.6,-6.4);g.quadraticCurveTo(0,-5.2,1.6,-6.4);g.stroke();
- if(style==='hair'){ // герой: растрёпанная чёлка
-  g.beginPath();g.moveTo(-11,-13);
-  g.quadraticCurveTo(-12,-22,-5,-25.4);g.quadraticCurveTo(0,-27.6,5,-25);
-  g.quadraticCurveTo(12,-22,11,-12.6);
-  g.lineTo(8.6,-18);g.lineTo(7.2,-13.6);g.lineTo(5.4,-19.4);g.lineTo(3.4,-14);
-  g.lineTo(1.2,-20.2);g.lineTo(-1.4,-14.6);g.lineTo(-3.8,-20);g.lineTo(-5.2,-14);
-  g.lineTo(-7.4,-19);g.lineTo(-9,-13.6);g.closePath();
-  g.fillStyle=lgg(g,-11,-26,10,-13,[[0,p.hairHi],[.4,p.hair],[1,p.hair]]);g.fill();
-  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=.8;g.stroke();
+ g.strokeStyle='rgba(60,30,40,.65)';g.lineWidth=1.1;g.lineCap='round';
+ g.beginPath();g.moveTo(-1.5,-6.6);g.quadraticCurveTo(0,-5.3,1.5,-6.6);g.stroke();
+ if(style==='hair'){ // герой: объёмная чёлка тремя крупными прядями + блик
+  g.beginPath();g.moveTo(-11.4,-12.6);
+  g.quadraticCurveTo(-12.6,-23.4,-4.6,-26.8);
+  g.quadraticCurveTo(0,-28.2,4.6,-26.6);
+  g.quadraticCurveTo(12.6,-23.2,11.4,-12.4);
+  g.lineTo(7.8,-18.2);g.lineTo(5.8,-13.4);g.lineTo(2.6,-19.4);
+  g.lineTo(-.6,-13.8);g.lineTo(-3.6,-19.6);g.lineTo(-6,-14);
+  g.lineTo(-8.8,-18.4);g.lineTo(-10.2,-13.2);g.closePath();
+  g.fillStyle=lgg(g,-11,-27,10,-13,[[0,p.hairHi],[.45,p.hair],[1,p.hair]]);g.fill();
+  g.strokeStyle='rgba(0,0,0,.4)';g.lineWidth=.9;g.stroke();
+  g.strokeStyle=p.hairHi;g.globalAlpha=.55;g.lineWidth=1.6;g.lineCap='round'; // блик на волосах
+  g.beginPath();g.moveTo(-7.6,-23.4);g.quadraticCurveTo(-3,-25.8,2.4,-24.6);g.stroke();g.globalAlpha=1;
  }
- if(style==='hairF'){ // героиня: длинные волосы + чёлка + хвостики
+ if(style==='hairF'){ // героиня: длинные волосы, чёлка-арка + блик
   g.beginPath();g.moveTo(-11.4,-12);
   g.quadraticCurveTo(-13,-22,-5,-25.8);g.quadraticCurveTo(0,-27.8,5,-25.2);
   g.quadraticCurveTo(13,-21.6,11.6,-11.4);
@@ -137,6 +163,8 @@ function headChibi(g,p,style){
   g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=.8;g.stroke();
   g.strokeStyle=p.hairHi;g.globalAlpha=.6;g.lineWidth=1.4;
   g.beginPath();g.moveTo(-10.6,-14);g.quadraticCurveTo(-11.8,-8,-10.8,-2);g.stroke();g.globalAlpha=1;
+  g.strokeStyle=p.hairHi;g.globalAlpha=.5;g.lineWidth=1.5;g.lineCap='round'; // блик на чёлке
+  g.beginPath();g.moveTo(-7.2,-22.6);g.quadraticCurveTo(-2.6,-25,2.8,-23.4);g.stroke();g.globalAlpha=1;
  }
  if(style==='horns'||style==='helm'||style==='crown'||style==='ant'){
   // головной убор/рога поверх
@@ -147,18 +175,18 @@ function headChibi(g,p,style){
    g.fillStyle='rgba(0,0,0,.2)';g.beginPath();g.ellipse(0,-22.5,7,2.6,0,0,TAU);g.fill();
   }
   if(style==='helm'){
-   g.beginPath();g.arc(0,-14.5,11.6,Math.PI*1.02,Math.PI*1.98);g.closePath();
+   g.beginPath();g.moveTo(-10.6,-13.4);g.quadraticCurveTo(-11.7,-24.4,0,-25.6);g.quadraticCurveTo(11.7,-24.4,10.6,-13.4);g.closePath();
    g.fillStyle=lgg(g,0,-25,0,-13,[[0,p.plateHi],[1,p.plate]]);g.fill();
    g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=1;g.stroke();
    g.fillStyle=p.horn||'#93c5fd';
    g.beginPath();g.moveTo(-8,-20.6);g.quadraticCurveTo(-12.4,-25,-10.8,-29);g.lineTo(-7.4,-22.6);g.closePath();g.fill();
    g.beginPath();g.moveTo(8,-20.6);g.quadraticCurveTo(12.4,-25,10.8,-29);g.lineTo(7.4,-22.6);g.closePath();g.fill();
-   g.fillStyle='rgba(0,0,0,.55)';g.fillRect(-8.4,-14.6,16.8,4.6); // визор
-   for(const ex of[-4.6,4.6]){g.save();g.shadowColor=p.eye;g.shadowBlur=5;g.fillStyle=p.eye;
-    g.beginPath();g.ellipse(ex,-12.3,3,1.5,0,0,TAU);g.fill();g.restore()}
+   g.fillStyle='rgba(0,0,0,.55)';g.fillRect(-8.6,-14.8,17.2,5.4); // визор
+   for(const ex of[-4.5,4.5]){g.save();g.shadowColor=p.eye;g.shadowBlur=5;g.fillStyle=p.eye;
+    g.beginPath();g.ellipse(ex,-12.2,3,1.6,0,0,TAU);g.fill();g.restore()}
   }
   if(style==='crown'){
-   g.beginPath();g.arc(0,-14.5,11.6,Math.PI*1.02,Math.PI*1.98);g.closePath();
+   g.beginPath();g.moveTo(-10.6,-13.4);g.quadraticCurveTo(-11.7,-24.4,0,-25.6);g.quadraticCurveTo(11.7,-24.4,10.6,-13.4);g.closePath();
    g.fillStyle=lgg(g,0,-25,0,-13,[[0,p.plateHi],[1,p.plate]]);g.fill();
    g.strokeStyle=p.trim||'#f5c542';g.lineWidth=1.2;g.stroke();
    g.strokeStyle=p.horn||'#e7c76a';g.lineWidth=2.4;g.lineCap='round';

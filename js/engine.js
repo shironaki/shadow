@@ -1,6 +1,6 @@
 'use strict';
 /* ═══ SHADOW ENGINE · ядро: утилиты, звук, ввод, камера, свет, физика ═══ */
-const VER='0.11.1';
+const VER='0.12';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -13,7 +13,7 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 function hash2(x,y){let h=(x*374761393+y*668265263)^(x<<7);h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296}
 function ln(c,x1,y1,x2,y2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke()}
 function pth(g,pts){g.beginPath();g.moveTo(pts[0],pts[1]);for(let i=2;i<pts.length;i+=2)g.lineTo(pts[i],pts[i+1]);g.closePath()}
-function lgg(g,x0,y0,x1,y1,st){const gr=g.createLinearGradient(x0,y0,x1,y1);for(const s of st)gr.addColorStop(s[0],s[1]);return gr}
+function lgg(g,x0,y0,x1,y1,st){const gr=g.createLinearGradient(x0,y0,x1,y1);for(const s of st)gr.addColorStop(s[0],s[1]===undefined?'#888':s[1]);return gr} /* v0.12: undefined-цвет не роняет рендер */
 function showErr(m){const b=$('errBox');b.style.display='block';b.textContent='⚠ '+m;clearTimeout(showErr._t);showErr._t=setTimeout(()=>b.style.display='none',8000)}
 addEventListener('error',ev=>showErr((ev.message||'ошибка')+' @'+(ev.lineno||'?')));
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
