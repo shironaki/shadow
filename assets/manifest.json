@@ -1,0 +1,103 @@
+{
+  "canvas": {
+    "logicalWidth": 128,
+    "logicalHeight": 128
+  },
+  "characters": {
+    "warrior_male": {
+      "class": "warrior",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters/warrior/male/idle.png",
+        "walk": "assets/characters/warrior/male/walk.png",
+        "attack": "assets/characters/warrior/male/attack.png",
+        "hurt": "assets/characters/warrior/male/hurt.png",
+        "death": "assets/characters/warrior/male/death.png"
+      }
+    },
+    "warrior_female": {
+      "class": "warrior",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters/warrior/female/idle.png",
+        "walk": "assets/characters/warrior/female/walk.png",
+        "attack": "assets/characters/warrior/female/attack.png",
+        "hurt": "assets/characters/warrior/female/hurt.png",
+        "death": "assets/characters/warrior/female/death.png"
+      }
+    },
+    "mage_male": {
+      "class": "mage",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters/mage/male/idle.png",
+        "walk": "assets/characters/mage/male/walk.png",
+        "attack": "assets/characters/mage/male/attack.png",
+        "hurt": "assets/characters/mage/male/hurt.png",
+        "death": "assets/characters/mage/male/death.png"
+      }
+    },
+    "mage_female": {
+      "class": "mage",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters/mage/female/idle.png",
+        "walk": "assets/characters/mage/female/walk.png",
+        "attack": "assets/characters/mage/female/attack.png",
+        "hurt": "assets/characters/mage/female/hurt.png",
+        "death": "assets/characters/mage/female/death.png"
+      }
+    },
+    "archer_male": {
+      "class": "archer",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters/archer/male/idle.png",
+        "walk": "assets/characters/archer/male/walk.png",
+        "attack": "assets/characters/archer/male/attack.png",
+        "hurt": "assets/characters/archer/male/hurt.png",
+        "death": "assets/characters/archer/male/death.png"
+      }
+    },
+    "archer_female": {
+      "class": "archer",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters/archer/female/idle.png",
+        "walk": "assets/characters/archer/female/walk.png",
+        "attack": "assets/characters/archer/female/attack.png",
+        "hurt": "assets/characters/archer/female/hurt.png",
+        "death": "assets/characters/archer/female/death.png"
+      }
+    },
+    "assassin_male": {
+      "class": "assassin",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters/assassin/male/idle.png",
+        "walk": "assets/characters/assassin/male/walk.png",
+        "attack": "assets/characters/assassin/male/attack.png",
+        "hurt": "assets/characters/assassin/male/hurt.png",
+        "death": "assets/characters/assassin/male/death.png"
+      }
+    },
+    "assassin_female": {
+      "class": "assassin",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters/assassin/female/idle.png",
+        "walk": "assets/characters/assassin/female/walk.png",
+        "attack": "assets/characters/assassin/female/attack.png",
+        "hurt": "assets/characters/assassin/female/hurt.png",
+        "death": "assets/characters/assassin/female/death.png"
+      }
+    }
+  },
+  "animations": {
+    "idle": { "frames": 6, "fps": 8, "loop": true },
+    "walk": { "frames": 8, "fps": 12, "loop": true },
+    "attack": { "frames": 6, "fps": 16, "loop": false },
+    "hurt": { "frames": 4, "fps": 12, "loop": false },
+    "death": { "frames": 8, "fps": 10, "loop": false }
+  }
+}
