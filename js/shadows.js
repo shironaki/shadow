@@ -48,6 +48,10 @@ function updateShadows(dt,p){
   s.rise=Math.max(0,s.rise-dt*1.6);s.cd-=dt;s.flash=Math.max(0,(s.flash||0)-dt);s.swingT=Math.max(0,(s.swingT||0)-dt);
   let moved=false;
   const rng=Math.min(ET[s.type].rng*.8+.2,2.2);
+  // v0.10: leash — тень не уходит дальше 8 клеток от хозяина
+  if(dist(s.x,s.y,p.x,p.y)>8){s.target=null;
+   if(dist(s.x,s.y,p.x,p.y)>12){s.x=p.x+rand(-1,1);s.y=p.y+rand(-1,1);burst(s.x,s.y,6,'#7dd3fc',2)}
+  }
   if(st==='hold'){
    // СТОЙ: тени стоят на месте, бьют только подошедших вплотную
    let tgt=(s.target&&!s.target.dead&&dist(s.target.x,s.target.y,s.x,s.y)<rng+.5)?s.target:null;

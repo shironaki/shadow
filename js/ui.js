@@ -137,7 +137,9 @@ function renderStatus(){
   <button class="up" data-st="${k}" ${p.pts<=0?'disabled':''}>+</button></div>`};
  const drow=(k,label)=>`<div class="dqr"><span>${label}</span><b style="color:${d[k]>=DQT[k]?'#4ade80':'#8ec9ff'}">${Math.min(d[k],DQT[k])}/${DQT[k]}${d[k]>=DQT[k]?' ✓':''}</b></div>`;
  const unl=clamp(1+Math.floor(G.counters.gates/3),1,6);
+ const clsInfo=CLASSES[p.cls||'shade'];
  $('statusBody').innerHTML=`
+ <div class="setrow" style="border:none;padding-top:0"><span>${p.sex==='f'?'Охотница':'Охотник'} · <b style="color:#c4b5fd">${clsInfo.n}</b> — ${clsInfo.d}</span></div>
   <div class="statHead">
     <div class="rankBig" style="color:${RANKC[r]};border-color:${RANKC[r]}">${r}</div>
     <div><b>${p.name||'ОХОТНИК'}</b><small>Уровень ${p.level} · Охотник ранга ${r}</small>
@@ -269,8 +271,9 @@ function toast(msg,col){
 }
 function splash(t,s,red){$('splashT').textContent=t;$('splashS').textContent=s||'';
  const el=$('splash');el.classList.toggle('red',!!red);el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
-const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Владыки»</h4>
-<b>v0.9 (текущая)</b> — МОДУЛЬНЫЙ ДВИЖОК: 9 файлов js/ (ядро/данные/мир/спрайты/сущности/тени/бой/UI/главный) без шага сборки. Золотые <b style="color:#fbbf24">мега-врата</b> (после 9 зачисток): мегабоссы <b>Беллион</b> и <b>Беру</b>, победа + АРИЗ даёт тень-<b style="color:#f0abfc">Легенду</b> (ранг 5, ×2.7 силы). Полное управление армией: стойки <b>Штурм/Оборона/Стой</b> (V), приказ-цель — последний удар игрока, отзыв всех (T). Руда в подземельях: жилы выбиваются ударами (золото/материалы/самоцветы). Лут подбирается шире, магнит сильнее. Новый портрет и человечная фигурка героя, наклон корпуса по прицелу и движению.<br>
+const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Путь Охотника»</h4>
+<b>v0.10 (текущая)</b> — ВЫБОР: пол (мужчина/женщина — своя фигурка и портрет) и классы Тень/Страж/Чародей. МИР: пол светлее, стены — светлые плиты с гранями и контактными тенями — проходы читаются. ГЕРОЙ: человечные пропорции (длинные ноги). АРИЗ: шанс виден и растёт с уровнем, провал не сжигает тело. Тени: leash 8 клеток. Лор очищен от чужих отсылок.<br>
+<b>v0.9</b> — МОДУЛЬНЫЙ ДВИЖОК: 9 файлов js/ (ядро/данные/мир/спрайты/сущности/тени/бой/UI/главный) без шага сборки. Золотые <b style="color:#fbbf24">мега-врата</b> (после 9 зачисток): мегабоссы <b>Беллион</b> и <b>Беру</b>, победа + АРИЗ даёт тень-<b style="color:#f0abfc">Легенду</b> (ранг 5, ×2.7 силы). Полное управление армией: стойки <b>Штурм/Оборона/Стой</b> (V), приказ-цель — последний удар игрока, отзыв всех (T). Руда в подземельях: жилы выбиваются ударами (золото/материалы/самоцветы). Лут подбирается шире, магнит сильнее. Новый портрет и человечная фигурка героя, наклон корпуса по прицелу и движению.<br>
 <b>v0.8.1</b> — починен джойстик на телефоне (зона касаний не получала события), мобильная раскладка разведена по углам с учётом safe-area; у каждого ранга врат своя палитра подземелья.<br>
 <b>v0.8 (текущая)</b> — ВОССТАНОВЛЕН БОЙ ВРАГОВ: у мобов снова есть замах, маги стреляют болтами, Палач бьёт слэмом по площади; leash-агро; ввод навыков блокируется при открытых окнах; миникарта вписана в холст; NaN-защита HP в старых сейвах; автосейв при сворачивании вкладки; разблокировка звука на iOS; Enter в поле имени; фавикон.<br>
 <b>v0.7</b> — Мир-хаб с вратами рангов E→S и Алыми вратами.<br>
@@ -299,20 +302,22 @@ function humanoid(X,Y,o){
  if(al>.3){ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.ellipse(X,Y+1,11*sc,4.4*sc,0,0,TAU);ctx.fill()}
  ctx.save();ctx.globalAlpha=al;ctx.translate(X,Y);ctx.scale(f*sc,sc*(o.wind>0?.94:1));
  if(o.tilt)ctx.rotate(o.tilt); // v0.9: наклон тела к направлению атаки/движения
+ const hip=o.hip||12; // v0.10: длина ног (герой 21 — человечные пропорции)
  const lw=o.moving?Math.sin(o.walk*11)*4.2:0;
  ctx.strokeStyle=o.leg;ctx.lineWidth=o.legW||4.6;ctx.lineCap='round';
- ln(ctx,-3.4,-12,-3.8-lw*.7,-.6);ln(ctx,3.4,-12,3.8+lw*.7,-.6);
+ const lxx=o.hipX||3.4;
+ ln(ctx,-lxx,-hip,-lxx-1.2-lw*.7,-.6);ln(ctx,lxx,-hip,lxx+1.2+lw*.7,-.6);
  const T=SPR[o.tor];if(!T){ctx.restore();return}
- ctx.drawImage(T.c,-T.px,-12-bob-T.py,T.w,T.h);
+ ctx.drawImage(T.c,-T.px,-hip-bob-T.py,T.w,T.h);
  const H=SPR[o.head],hs=o.hs||1;
- if(H){ctx.save();ctx.translate(0,-12-bob-T.h+2);ctx.scale(hs,hs);ctx.drawImage(H.c,-H.px,-H.py,H.w,H.h);ctx.restore()}
+ if(H){ctx.save();ctx.translate(0,-hip-bob-T.h+2);ctx.scale(hs,hs);ctx.drawImage(H.c,-H.px,-H.py,H.w,H.h);ctx.restore()}
  const idle=o.armIdle??.85;
  let ang;
  if(o.swing!=null)ang=lerp(-2.1,1.5,o.swing);
  else if(o.wind>0)ang=lerp(idle,-2.15,o.wind);
  else ang=idle+Math.sin(o.walk*2)*.07;
  const A=SPR[o.arm];
- if(A){ctx.save();ctx.translate(3.4,-12-bob-T.h+6);ctx.rotate(ang);ctx.drawImage(A.c,-A.px,-A.py,A.w,A.h);ctx.restore()}
+ if(A){ctx.save();ctx.translate(3,-hip-bob-T.h+7);ctx.rotate(ang);ctx.drawImage(A.c,-A.px,-A.py,A.w,A.h);ctx.restore()}
  ctx.restore();
  if(o.flash>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(.75,o.flash*5);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(X,Y-20*sc,10*sc,20*sc,0,0,TAU);ctx.fill();ctx.restore()}
@@ -356,7 +361,8 @@ function ariseBubble(X,Y){
 }
 function drawPlayer(X,Y){
  const p=G.player,ult=G.ultiT>0;
- const pal=ult?'heroU':'hero';
+ const fem=p.sex==='f'; // v0.10: женский вариант
+ const pal=ult?(fem?'heroUF':'heroU'):(fem?'heroF':'hero');
  ctx.save();ctx.translate(X,Y);
  ctx.globalAlpha=ult?.5:(G.stealth>0?.25:.3);ctx.strokeStyle=ult?'#d8b4fe':'#8b5cf6';ctx.lineWidth=1.3;
  ctx.setLineDash([6,5]);ctx.lineDashOffset=G.time*14;
@@ -367,7 +373,7 @@ function drawPlayer(X,Y){
   ctx.beginPath();ctx.ellipse(X,Y,17,8,0,0,TAU);ctx.stroke();ctx.restore()}
  capeDraw(X,Y,p.face,p.walk,p.moving,ult?'#1d1145':'#0d0a22',.96*(G.stealth>0?.55:1));
  const tilt=(p.atkT>0||p.swingT>0)?.42*clamp(p.aimY,-1,1):clamp(p.aimY,-1,1)*.26+(p.moving?.13:0); // v0.9: корпус возвращает по прицелу/движению
- humanoid(X,Y,{tor:'tor_'+pal,head:'head_'+pal,arm:ult?'arm_claw':'arm_hero',leg:PALS[pal].leg,legW:4.4,hs:1.16,
+ humanoid(X,Y,{tor:'tor_'+pal,head:'head_'+pal,arm:ult?'arm_claw':'arm_hero',leg:PALS[pal].leg,legW:fem?4.6:5.2,hs:1,hip:fem?20:21,hipX:fem?3:3.4,
   face:p.face,walk:p.walk,moving:p.moving,alpha:G.stealth>0?.4:.98,swing:p.swingT>0?1-p.swingT/.24:null,wind:0,armIdle:.8,tilt});
  if(G.whirl){ctx.save();ctx.translate(X,Y-14);
   for(let i=0;i<2;i++){ctx.rotate(G.time*10+i*Math.PI);
@@ -378,8 +384,9 @@ function drawPlayer(X,Y){
   ctx.restore();}
 }
 function drawGhost(g2){
- humanoid(w2sx(g2.x,g2.y),w2sy(g2.x,g2.y),{tor:'tor_hero',head:'head_hero',arm:'arm_hero',
-  leg:'#120e2c',hs:1.16,face:g2.face,walk:0,moving:false,alpha:.35*(1-g2.t/.35),wind:0});
+ const fem=G.player&&G.player.sex==='f';
+ humanoid(w2sx(g2.x,g2.y),w2sy(g2.x,g2.y),{tor:fem?'tor_heroF':'tor_hero',head:fem?'head_heroF':'head_hero',arm:'arm_hero',
+  leg:'#120e2c',hs:1,hip:21,face:g2.face,walk:0,moving:false,alpha:.35*(1-g2.t/.35),wind:0});
 }
 function houndDraw(X,Y,o){
  const bob=o.mv?Math.sin(o.walk*13)*1.3:Math.sin(o.walk*2)*.4;
@@ -441,7 +448,7 @@ function drawEnemy(e,X,Y){
   sigil(X,Y,34,pc);dGl(X,Y-14,46,pc,.24);lights.push({x:e.x,y:e.y,r:5.5,i:.6});
   if(bel)capeDraw(X,Y,e.face,e.walk,e.mv,'#2a1015',.92);
   humanoid(X,Y,{tor:bel?'tor_bel':'tor_ber',head:bel?'head_bel':'head_ber',arm:bel?'arm_bel':'arm_ber',
-   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,face:e.face,walk:e.walk,moving:e.mv,
+   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,hip:21,face:e.face,walk:e.walk,moving:e.mv,
    swing:swingP,wind:windP,scale:bel?1.75:1.6,armIdle:.95,flash:e.flash,tilt:etilt});
  }else{
   const kn=e.type!=='soldier';
@@ -484,7 +491,7 @@ function drawShadow(s,X,Y){
  }else if(s.type==='bel'||s.type==='beru'){ // v0.9: тени-легенды
   const bel=s.type==='bel';
   humanoid(X,yy,{tor:bel?'tor_bel':'tor_ber',head:bel?'head_bel':'head_ber',arm:bel?'arm_bel':'arm_ber',
-   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,face:s.face,walk:s.walk,moving:true,
+   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,hip:21,face:s.face,walk:s.walk,moving:true,
    swing:swingP,wind:0,scale:bel?1.6:1.45,armIdle:.95,alpha:al,flash:s.flash});
  }else if(s.type==='kamish'){
   humanoid(X,yy,{tor:'tor_kam',head:'head_kam',arm:'arm_kam',leg:'#200b05',legW:6.4,hs:1.04,face:s.face,walk:s.walk,moving:true,
@@ -873,7 +880,8 @@ function updateComp(force){
  $('compFill').style.width=clamp(s.hp/s.maxhp*100,0,100)+'%';
  setTxt('compRar',s.grade?GDN[s.grade]:'В СТРОЮ');
 }
-function drawPortrait(){ // v0.9: новый портрет — спокойный взгляд охотника
+function drawPortrait(sex){ // v0.10: портрет — мужчина/женщина
+ const fem=sex==='f'||(!sex&&G.player&&G.player.sex==='f');
  const c=$('portrait').getContext('2d'),S=132;
  const g=c.createLinearGradient(0,0,S,S);g.addColorStop(0,'#1c1440');g.addColorStop(.55,'#141033');g.addColorStop(1,'#0a081c');
  c.fillStyle=g;c.fillRect(0,0,S,S);
@@ -898,19 +906,41 @@ function drawPortrait(){ // v0.9: новый портрет — спокойны
  c.quadraticCurveTo(0,12,-9,6);c.quadraticCurveTo(-17,0,-19,-14);c.closePath();c.fill();
  c.strokeStyle='rgba(255,255,255,.18)';c.lineWidth=2;
  c.beginPath();c.moveTo(-19,-16);c.quadraticCurveTo(-20,-30,-11,-40);c.stroke();
- // причёска: зачёс назад
- c.beginPath();c.moveTo(-22,-18);
- c.quadraticCurveTo(-26,-42,-12,-52);c.quadraticCurveTo(0,-58,13,-51);
- c.quadraticCurveTo(25,-43,23,-20);
- c.quadraticCurveTo(19,-34,12,-39);c.quadraticCurveTo(2,-43,-8,-39);
- c.quadraticCurveTo(-17,-33,-22,-18);c.closePath();
- const hg=c.createLinearGradient(-14,-54,14,-36);hg.addColorStop(0,'#2b2452');hg.addColorStop(1,'#191338');
- c.fillStyle=hg;c.fill();
- c.strokeStyle='rgba(139,92,246,.35)';c.lineWidth=1.2;
- c.beginPath();c.moveTo(-14,-46);c.quadraticCurveTo(0,-53,14,-45);c.stroke();
+ // причёска
+ if(fem){
+  // женская: длинные волосы до плеч + чёлка
+  c.beginPath();c.moveTo(-23,-16);
+  c.quadraticCurveTo(-27,-44,-12,-53);c.quadraticCurveTo(0,-59,13,-52);
+  c.quadraticCurveTo(26,-44,24,-18);
+  c.quadraticCurveTo(23,-6,20,2);c.lineTo(14,1);
+  c.quadraticCurveTo(19,-12,17,-26);c.quadraticCurveTo(15,-38,6,-42);
+  c.lineTo(10,-30);c.quadraticCurveTo(11,-20,9,-12);c.lineTo(5,-13);
+  c.quadraticCurveTo(7,-24,4,-34);c.quadraticCurveTo(0,-42,-8,-38);
+  c.quadraticCurveTo(-16,-34,-18,-22);
+  c.quadraticCurveTo(-20,-10,-17,2);c.lineTo(-21,2);c.closePath();
+  const hgf=c.createLinearGradient(-16,-55,16,0);hgf.addColorStop(0,'#3a2c66');hgf.addColorStop(1,'#1a1438');
+  c.fillStyle=hgf;c.fill();
+  c.strokeStyle='rgba(196,181,253,.4)';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(-13,-47);c.quadraticCurveTo(0,-54,13,-46);c.stroke();
+  c.beginPath();c.moveTo(-16,-38);c.quadraticCurveTo(-19,-18,-16,0);c.stroke();
+  c.beginPath();c.moveTo(16,-38);c.quadraticCurveTo(19,-18,16,0);c.stroke();
+  c.beginPath();c.moveTo(-12,-44);c.quadraticCurveTo(-4,-49,6,-45);c.quadraticCurveTo(1,-41,-6,-41.6);c.closePath();
+  c.fillStyle='#241b4d';c.fill();
+ }else{
+  // мужская: зачёс назад
+  c.beginPath();c.moveTo(-22,-18);
+  c.quadraticCurveTo(-26,-42,-12,-52);c.quadraticCurveTo(0,-58,13,-51);
+  c.quadraticCurveTo(25,-43,23,-20);
+  c.quadraticCurveTo(19,-34,12,-39);c.quadraticCurveTo(2,-43,-8,-39);
+  c.quadraticCurveTo(-17,-33,-22,-18);c.closePath();
+  const hg=c.createLinearGradient(-14,-54,14,-36);hg.addColorStop(0,'#2b2452');hg.addColorStop(1,'#191338');
+  c.fillStyle=hg;c.fill();
+  c.strokeStyle='rgba(139,92,246,.35)';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(-14,-46);c.quadraticCurveTo(0,-53,14,-45);c.stroke();
+ }
  // глаза: спокойные, с фиолетовым отблеском
  for(const ex of[-9,9]){
-  c.fillStyle='#f8f6ff';c.beginPath();c.ellipse(ex,-16,5.4,3.4,ex<0?.06:-.06,0,TAU);c.fill();
+  c.fillStyle='#f8f6ff';c.beginPath();c.ellipse(ex,-16,fem?5.8:5.4,fem?3.7:3.4,ex<0?.06:-.06,0,TAU);c.fill();
   c.save();c.shadowColor='#a78bfa';c.shadowBlur=6;c.fillStyle='#4c1d95';
   c.beginPath();c.ellipse(ex+(ex<0?.8:-.8),-16,2.6,2.7,0,0,TAU);c.fill();c.restore();
   c.fillStyle='#0c0a18';c.beginPath();c.ellipse(ex+(ex<0?.8:-.8),-16,1.15,1.6,0,0,TAU);c.fill();
@@ -923,6 +953,9 @@ function drawPortrait(){ // v0.9: новый портрет — спокойны
  c.beginPath();c.moveTo(0,-14);c.quadraticCurveTo(1.6,-8,.6,-5.6);c.stroke();
  c.strokeStyle='rgba(90,50,50,.55)';c.lineWidth=1.8;
  c.beginPath();c.moveTo(-4.4,-.4);c.quadraticCurveTo(0,1.4,4.4,-.8);c.stroke();
+ if(fem){c.strokeStyle='rgba(200,90,110,.8)';c.lineWidth=2.2;
+  c.beginPath();c.moveTo(-3.6,-.6);c.quadraticCurveTo(0,1.8,3.6,-.9);c.stroke();
+  c.fillStyle='rgba(220,120,140,.25)';c.beginPath();c.ellipse(0,.8,3,1.4,0,0,TAU);c.fill()}
  c.restore();
  // мягкие тени-виньетки по углам
  c.fillStyle='rgba(10,8,28,.55)';

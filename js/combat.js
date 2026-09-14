@@ -70,7 +70,7 @@ function killEnemy(e){
  if((e.elite||e.boss)&&!e.gateBoss){p.essence+=e.boss?3:1;p.gold+=e.boss?120:40;
   log('combat',`<b>${b.n}</b> повержен!`);}
  const rank=e.boss?'boss':e.elite?'elite':'norm';
- G.corpses.push({type:e.type,x:e.x,y:e.y,t:0,rank,arise:0,burn:0,riseCh:b.rise,mega:b.mega?1:0});
+ G.corpses.push({type:e.type,x:e.x,y:e.y,t:0,rank,lvl:G.gateDiff,arise:0,burn:0,riseCh:b.rise===1?1:undefined,mega:b.mega?1:0}); // v0.10: rise=1 только у мегабоссов, прочие — шанс по рангу
  if(!G.tutArise){G.tutArise=true;
   toast('Тело врага пало — нажмите X или кнопку «АРИЗ!» рядом с ним','#93c5fd');
   log('system','<b>Система:</b> используйте «АРИЗ!» (X) у тела, чтобы извлечь тень.');}
@@ -158,8 +158,8 @@ function castSkill(k){
   if(G.ultiT>0)return;
   if(p.fury<100){toast('Ярость не готова: '+Math.floor(p.fury)+'%');SFX.ui();return}
   p.fury=0;G.ultiT=SK.u.dur;G.ultiTick=0;SFX.ulti();G.punch=Math.min(.6,G.punch+.35);
-  splash('ПРОБУЖДЕНИЕ МОНАРХА','АРИЗЕ — ВЛАСТЬ ТЕНЕЙ');
-  log('system','<b>ПРОБУЖДЕНИЕ МОНАРХА!</b> Тьма слушается вас.');
+  splash('ПРОБУЖДЕНИЕ ТЕНИ','ТЬМА ПОКОРНА ВАМ');
+  log('system','<b>ПРОБУЖДЕНИЕ ТЕНИ!</b> Тьма слушается вас.');
   addFx({kind:'ring',x:p.x,y:p.y,r0:.5,r1:6.5,t:0,dur:.6,c:'#a855f7'});
   burst(p.x,p.y,40,'#a855f7',5);G.cam.shake=9;return;
  }
@@ -167,8 +167,9 @@ function castSkill(k){
  if(k==='c'){trySwap();return}
  const s=SK[k],lv=p.skillLv[k];
  if(p.cds[k]>0){toast('Перезарядка: '+p.cds[k].toFixed(1)+' с');return}
- if(p.mp<s.mp){toast('Недостаточно маны');SFX.ui();return}
- p.mp-=s.mp;p.cds[k]=s.cd;
+ const cost=Math.round(s.mp*(p.cls==='mage'?.75:1)); // v0.10: Чародей
+ if(p.mp<cost){toast('Недостаточно маны');SFX.ui();return}
+ p.mp-=cost;p.cds[k]=s.cd;
  const t=aimPoint();faceTo(t.x,t.y);
  const mult=s.dmg*(1+.15*(lv-1));
  G.stealth=0;
@@ -194,16 +195,19 @@ function tryArise(){
  for(const c of bodies){
   if(p.mp<SK.x.mp){toast('Недостаточно маны для призыва');break}
   p.mp-=SK.x.mp;
-  const chance=c.riseCh!==undefined?c.riseCh:(c.rank==='boss'?.3:c.rank==='elite'?.4:.6);
-  if(Math.random()<chance+G.riseBonus){
+  // v0.10: шанс зависит от силы охотника против уровня врага; провал не сжигает тело
+  const pw=p.level+(p.stats.per||1)*.5,lv=c.lvl||G.gateDiff||1;
+  const base=c.riseCh===1?1:(c.rank==='boss'?.42:c.rank==='elite'?.55:.78);
+  const chance=Math.min(.97,base+(pw-lv)*.04+G.riseBonus+(c.tried||0)*.15);
+  if(Math.random()<chance){
    c.arise=.9;
-   spawnText(c.x,c.y-1.4,'АРИЗ!','#c084fc',true);
+   spawnText(c.x,c.y-1.4,'АРИЗ! '+Math.round(chance*100)+'%','#c084fc',true);
    SFX.arise();G.punch=Math.min(.6,G.punch+.15);
    addFx({kind:'ring',x:c.x,y:c.y,r0:.2,r1:2.2,t:0,dur:.8,c:'#60a5fa'});
-   log('system','<b>АРИЗ!</b> Тьма дрожит над телом '+ET[c.type].n+'…');
+   log('system','<b>АРИЗ!</b> ('+Math.round(chance*100)+'%) Тьма дрожит над телом '+ET[c.type].n+'…');
   }else{
-   c.burn=.9;
-   spawnText(c.x,c.y,'Тень ускользнула…','#94a3b8');
+   c.tried=(c.tried||0)+1;
+   spawnText(c.x,c.y,'Тень вырвалась ('+Math.round(chance*100)+'%) — можно повторить','#94a3b8');
    SFX.fail();
   }
  }
@@ -526,6 +530,7 @@ for(let i=G.loots.length-1;i>=0;i--){const L=G.loots[i];L.t+=dt;
 }
 function hurtPlayer(dmg){
  const p=G.player;if(p.dead||p.inv>0)return;
+ if(p.cls==='ward')dmg*=.82; // v0.10: Страж
  dmg=Math.round(dmg*rand(.9,1.1));p.hp-=dmg;G.noCombat=0;G.hurtT=1;addFury(6);G.punch=Math.min(.5,G.punch+.12);
  G.stealth=0;
  spawnText(p.x,p.y,'-'+dmg,'#f87171',false);SFX.hurt();

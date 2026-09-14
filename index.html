@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <!--
 ═══════════════════════════════════════════════════════════════════
- ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.9 «Владыки»
+ ПАСПОРТ ПРОЕКТА · SHADOW ASCENSION · Версия: 0.10 «Путь Охотника»
  ─────────────────────────────────────────────────────────────────
- v0.9 — ТЕКУЩАЯ. ДВИЖОК: монолит разрезан на 9 модулей (js/ — классические
+ v0.10 — ТЕКУЩАЯ. ВЫБОР: пол героя (мужчина/женщина) и классы
+   Тень/Страж/Чародей. МИР ЧИТАЕМ: пол светлее, стены — светлые
+   плиты с тёмными гранями и контактными тенями на полу. ГЕРОЙ:
+   человечные пропорции. АРИЗ: честный шанс в процентах, провал
+   не сжигает тело; боссы поднимаемы. Тени: leash 8 клеток.
+   Лор очищен от отсылок к чужим вселенным.
+ v0.9 — ДВИЖОК: монолит разрезан на 9 модулей (js/ — классические
    скрипты, без сборки). ФИЧИ: золотые мега-врата с мегабоссами
    (Беллион/Беру) → тени-«Легенды» (ранг 5); полное управление армией
    (стойки Штурм/Оборона/Стой, фокус-цель, отзыв); добыча руды из жил
@@ -251,6 +257,13 @@ body.cine #lbT,body.cine #lbB{height:9vh}
 #nameInp{background:rgba(10,8,24,.85);border:1px solid var(--line);border-radius:10px;color:#f3efff;font-family:Philosopher;font-size:18px;letter-spacing:.12em;padding:10px 16px;text-align:center;width:min(280px,80vw);outline:none}
 #nameInp:focus{border-color:var(--pur);box-shadow:0 0 16px rgba(168,85,247,.35)}
 .hint{margin-top:26px;font-size:11.5px;color:var(--dim);line-height:1.9;max-width:560px}
+.selRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.selBtn{padding:9px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:#c7c3e8;font:600 13px Rubik;cursor:pointer;transition:all .15s}
+.selBtn:hover{border-color:#7c5cd6}
+.selBtn.on{border-color:#a78bfa;color:#ddd6fe;background:rgba(124,92,214,.16);box-shadow:0 0 12px rgba(124,92,214,.25)}
+.clsd{font-size:10.5px;color:var(--dim);margin-top:6px;min-height:14px;max-width:460px;text-align:center;line-height:1.6}
+.pickRow{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:14px}
+.pickRow label{font:700 10px Rubik;letter-spacing:3px;color:#8ec9ff}
 .hint b{color:#c4b5fd}
 #deathOv{display:none;background:radial-gradient(ellipse at center,rgba(60,5,10,.75),rgba(5,1,3,.97) 70%)}
 #deathOv .bigT{background:linear-gradient(180deg,#fecaca,#ef4444 60%,#7f1d1d);-webkit-background-clip:text;background-clip:text}
@@ -405,8 +418,15 @@ body.cine #lbT,body.cine #lbB{height:9vh}
 <div id="toasts"></div>
 <div class="screen" id="intro">
   <div class="bigT">SHADOW ASCENSION</div>
-  <div class="sub">АРИЗЕ · СИСТЕМА ВЫБРАЛА ВАС</div>
-  <div id="nameWrap" class="nmRow" style="display:none"><label>ИМЯ ОХОТНИКА</label><input id="nameInp" maxlength="16" placeholder="Сон Джин-Ву" autocomplete="off"></div>
+  <div class="sub">ИЗВЛЕЧЕНИЕ ТЕНЕЙ · СИСТЕМА ВЫБРАЛА ВАС</div>
+  <div id="nameWrap" class="pickRow" style="display:none">
+   <div class="nmRow"><label>ИМЯ ОХОТНИКА</label><input id="nameInp" maxlength="16" placeholder="Имя охотника" autocomplete="off"></div>
+   <div class="nmRow" style="flex-direction:column;align-items:center;gap:8px"><label>ПОЛ</label>
+    <div class="selRow" id="sexRow"><button class="selBtn on" data-sex="m">♂ Мужчина</button><button class="selBtn" data-sex="f">♀ Женщина</button></div></div>
+   <div class="nmRow" style="flex-direction:column;align-items:center;gap:8px"><label>КЛАСС</label>
+    <div class="selRow" id="clsRow"><button class="selBtn on" data-cls="shade">🗡 Тень</button><button class="selBtn" data-cls="ward">🛡 Страж</button><button class="selBtn" data-cls="mage">✨ Чародей</button></div>
+    <div class="clsd" id="clsDesc"></div></div>
+  </div>
   <div id="introBtns"></div>
   <div class="hint" id="introHint"></div>
 </div>

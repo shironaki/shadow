@@ -6,7 +6,7 @@ function saveGame(){
  if(!G.player)return;
  try{localStorage.setItem(SKEY,JSON.stringify({v:7,seed:G.seed,questSeq:G.questSeq,tutArise:G.tutArise,
   counters:G.counters,riseBonus:G.riseBonus,daily:G.daily,army:G.army,stance:G.stance||'assault',
-  p:{name:G.player.name||'',level:G.player.level,exp:G.player.exp,gold:G.player.gold,crystals:G.player.crystals,essence:G.player.essence,fury:G.player.fury,hp:G.player.hp,mp:G.player.mp,skillLv:G.player.skillLv,stats:G.player.stats,pts:G.player.pts},
+  p:{name:G.player.name||'',level:G.player.level,exp:G.player.exp,gold:G.player.gold,crystals:G.player.crystals,essence:G.player.essence,fury:G.player.fury,hp:G.player.hp,mp:G.player.mp,skillLv:G.player.skillLv,stats:G.player.stats,pts:G.player.pts,sex:G.player.sex||'m',cls:G.player.cls||'shade'},
   inv:inv,eq:{weapon:equipped.weapon?equipped.weapon.uid:0,armor:equipped.armor?equipped.armor.uid:0,ring:equipped.ring?equipped.ring.uid:0,relic:equipped.relic?equipped.relic.uid:0},
   shadows:G.shadows.map(s=>({type:s.type,lvl:s.lvl,hp:Math.round(s.hp),grade:s.grade||0,bench:!!s.bench})),set:SET}))}catch(e){}
 }
@@ -44,13 +44,14 @@ function startWorld(){
  G.mode='hub';G.hubGate=null;G.gateT=8;
  genHub();placePlayer();
 }
-function begin(cont,name){
+function begin(cont,name,sex,cls){
  if(G.started)return;
  AU.unlock();
  cvs.classList.toggle('fx',SET.filter);
- if(cont&&loadGame()){log('system','Прогресс загружен. С возвращением, '+(G.player.name||'Монарх')+'.')}
+ if(cont&&loadGame()){log('system','Прогресс загружен. С возвращением, '+(G.player.name||'Владыка')+'.')}
  else{G.seed=(Date.now()%1e9)||12345;newPlayer(null);
-  G.player.name=(name||'').trim().slice(0,16)||'Сон Джин-Ву';
+  G.player.sex=(sex==='f'?'f':'m');G.player.cls=CLASSES[cls]?cls:'shade'; // v0.10: пол и класс
+  G.player.name=(name||'').trim().slice(0,16)||(G.player.sex==='f'?'Охотница':'Охотник');
   inv=[];const w=makeItem('weapon',1,0);addItem(w);equipped.weapon=w;
   addItem(makeItem('potionHP',1));addItem(makeItem('potionHP',1));addItem(makeItem('potionMP',1));
   G.shadows=[];G.army={lvl:1,cnt:0};G.counters={kills:0,summons:0,elites:0,crystals:0,gates:0,army:1};
@@ -89,6 +90,15 @@ function initIntro(){
  const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
  const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';
  $('nameWrap').style.display=sv?'none':'flex';
+ const pick={sex:'m',cls:'shade'}; // v0.10: выбор пола и класса
+ if(!sv){
+  const cd2=$('clsDesc');if(cd2)cd2.textContent=CLASSES.shade.d;
+  document.querySelectorAll('#sexRow .selBtn').forEach(b=>b.onclick=()=>{
+   pick.sex=b.dataset.sex;document.querySelectorAll('#sexRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));drawPortrait(pick.sex)});
+  document.querySelectorAll('#clsRow .selBtn').forEach(b=>b.onclick=()=>{
+   pick.cls=b.dataset.cls;document.querySelectorAll('#clsRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));
+   if(cd2)cd2.textContent=CLASSES[b.dataset.cls].d;SFX.ui()});
+ }
  $('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+
   `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА':'ВОЙТИ В МИР'}</button>`;
  $('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';
@@ -97,7 +107,7 @@ function initIntro(){
  if(ni)ni.addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNew').click()});
  $('btnNew').onclick=()=>{
   try{['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].forEach(k=>localStorage.removeItem(k))}catch(e){}
-  begin(false,$('nameInp')?$('nameInp').value:'');
+  begin(false,$('nameInp')?$('nameInp').value:'',pick.sex,pick.cls);
  };
 }
 let lastT=performance.now();

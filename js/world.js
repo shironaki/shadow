@@ -120,10 +120,10 @@ function prerender(f){
  for(let y=0;y<M.H;y++)for(let x=0;x<M.W;x++){
   if(!M.grid[y*M.W+x])continue;
   const sx=ix(x,y),sy=iy(x,y),hh=hash2(x,y),h2=hash2(x*3+7,y*5+3);
-  const L1=13+hh*7,L2=11+((hh*7)%1)*6;
+  const L1=26+hh*8,L2=20+((hh*7)%1)*7; // v0.10: пол светлее — стены/пол читаются
   pth(c,[sx,sy-16,sx+32,sy,sx,sy+16]);c.fillStyle=`hsl(${PH+hh*14} ${PS+h2*9}% ${L1}%)`;c.fill();
   pth(c,[sx,sy-16,sx,sy+16,sx-32,sy]);c.fillStyle=`hsl(${PH+hh*14} ${PS+h2*9}% ${L2}%)`;c.fill();
-  c.strokeStyle='rgba(255,255,255,.05)';c.lineWidth=1;
+  c.strokeStyle='rgba(255,255,255,.09)';c.lineWidth=1;
   c.beginPath();c.moveTo(sx,sy-16);c.lineTo(sx-32,sy);c.moveTo(sx,sy-16);c.lineTo(sx+32,sy);c.stroke();
   c.strokeStyle='rgba(0,0,0,.4)';
   c.beginPath();c.moveTo(sx-32,sy);c.lineTo(sx,sy+16);c.lineTo(sx+32,sy);c.stroke();
@@ -131,13 +131,18 @@ function prerender(f){
   if(h2>.87){c.strokeStyle='rgba(0,0,0,.35)';c.beginPath();c.moveTo(sx-12+hh*8,sy-4);c.lineTo(sx-2,sy+2);c.lineTo(sx+8-h2*6,sy-2);c.stroke()}
   if(hh<.035){c.save();c.shadowColor=SCENE.acc;c.shadowBlur=5;c.strokeStyle=SCENE.acc2;
    c.beginPath();c.arc(sx,sy,6,0,TAU);c.moveTo(sx-6,sy);c.lineTo(sx+6,sy);c.moveTo(sx,sy-4);c.lineTo(sx,sy+4);c.stroke();c.restore()}
-  for(const[dx,dy]of[[1,0],[0,1],[-1,0],[0,-1]]){
-   if(!solid(x+dx,y+dy))continue;
-   const gx=sx+(dx-dy)*16,gy=sy+(dx+dy)*16;
-   const g2=c.createRadialGradient(gx,gy,2,gx,gy,26);
-   g2.addColorStop(0,'rgba(0,0,0,.34)');g2.addColorStop(1,'rgba(0,0,0,0)');
-   c.fillStyle=g2;c.beginPath();c.arc(gx,gy,26,0,TAU);c.fill();
-  }
+  // v0.10: направленная тень от стены на пол — видно, где стена, а где проход
+  const edge=(ax,ay,bx,by)=>{
+   c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=1.4;
+   c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.stroke();
+   const t=.5;
+   pth(c,[ax,ay,bx,by,bx+(sx-bx)*t,by+(sy-by)*t,ax+(sx-ax)*t,ay+(sy-ay)*t]);
+   c.fillStyle='rgba(0,0,0,.30)';c.fill();
+  };
+  if(solid(x+1,y))edge(sx+32,sy,sx,sy+16);
+  if(solid(x,y+1))edge(sx-32,sy,sx,sy+16);
+  if(solid(x-1,y))edge(sx-32,sy,sx,sy-16);
+  if(solid(x,y-1))edge(sx,sy-16,sx+32,sy);
  }
  for(let i=0;i<26;i++){const r=M.rooms[(R()*M.rooms.length)|0];if(!r)continue;
   const x=r.x+R()*r.w,y=r.y+R()*r.h;if(solid(x|0,y|0))continue;
@@ -149,17 +154,20 @@ function prerender(f){
   if(!(nF(1,0)||nF(0,1)||nF(1,1)||nF(-1,0)||nF(0,-1)||nF(-1,-1)))continue;
   const sx=ix(x,y),sy=iy(x,y),hh=hash2(x*7,y*13);
   pth(c,[sx,sy-16-WH,sx+32,sy-WH,sx,sy+16-WH,sx-32,sy-WH]);
-  c.fillStyle=`hsl(${PH+hh*12} ${PW}% ${9+hh*4}%)`;c.fill();
-  c.strokeStyle='rgba(130,110,220,.10)';c.lineWidth=1;c.stroke();
+  c.fillStyle=`hsl(${PH+hh*12} ${PW}% ${42+hh*9}%)`;c.fill(); // v0.10: светлая вершина стены
+  c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1.2;c.stroke();
+  pth(c,[sx,sy-14-WH,sx+28,sy-WH,sx,sy+14-WH,sx-28,sy-WH]);
+  c.fillStyle=`hsl(${PH+hh*12} ${PW}% ${36+hh*7}%)`;c.fill();
   const face=(x1,y1,x2,y2)=>{
-   const grd=lgg(c,0,y1-WH,0,y1,[[0,`hsl(${PH} ${PW}% ${19+hh*5}%)`],[1,`hsl(${PH} ${PW+4}% ${7+hh*3}%)`]]);
+   const grd=lgg(c,0,y1-WH,0,y1,[[0,`hsl(${PH} ${PW}% ${30+hh*6}%)`],[1,`hsl(${PH} ${PW+4}% ${6+hh*3}%)`]]);
    pth(c,[x1,y1,x2,y2,x2,y2-WH,x1,y1-WH]);c.fillStyle=grd;c.fill();
-   c.strokeStyle='rgba(0,0,0,.35)';
+   c.strokeStyle='rgba(0,0,0,.5)';
    for(let r2=1;r2<4;r2++){const t=r2/4;c.beginPath();c.moveTo(x1,y1-WH*t);c.lineTo(x2,y2-WH*t);c.stroke()}
    for(let r2=0;r2<4;r2++){const t=(r2+.5)/4,k=hash2(x*3+r2,y*5)*.8+.1;
     const jx=lerp(x1,x2,k),jy=lerp(y1,y2,k);
     c.beginPath();c.moveTo(jx,jy-WH*t);c.lineTo(jx,jy-WH*t-6);c.stroke()}
-   c.strokeStyle='rgba(150,130,255,.15)';c.beginPath();c.moveTo(x1,y1-WH);c.lineTo(x2,y2-WH);c.stroke();
+   c.strokeStyle='rgba(255,255,255,.22)';c.beginPath();c.moveTo(x1,y1-WH);c.lineTo(x2,y2-WH);c.stroke();
+  c.strokeStyle='rgba(0,0,0,.55)';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
   };
   if(nF(1,0))face(sx,sy+16,sx+32,sy);
   if(nF(0,1))face(sx,sy+16,sx-32,sy);

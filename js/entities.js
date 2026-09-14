@@ -21,9 +21,10 @@ function newPlayer(sv){
   hp:1,mp:1,atk:20,maxhp:280,maxmp:99,crit:8,spd:5,mpRegen:4,face:1,walk:0,moving:false,atkT:0,swingT:0,combo:0,comboT:0,
   cds:{q:0,e:0,r:0,f:0,x:0,c:0},skillLv:{q:1,e:1,r:1},dashT:0,dashX:0,dashY:0,inv:0,dead:false,aimX:0,aimY:1,
   relKasaka:false,relBaruka:false,relMonolith:false,relHeart:false,
-  stats:{str:1,agi:1,vit:1,int:1,per:1},pts:0};
+  stats:{str:1,agi:1,vit:1,int:1,per:1},pts:0,sex:'m',cls:'shade'}; // v0.10: пол и класс
  if(sv){
   Object.assign(G.player,{name:sv.name||'',level:sv.level||1,exp:sv.exp||0,gold:sv.gold||0,crystals:sv.crystals||0,essence:sv.essence||0,fury:sv.fury||0,skillLv:sv.skillLv||{q:1,e:1,r:1}});
+  G.player.sex=sv.sex==='f'?'f':'m';G.player.cls=CLASSES[sv.cls]?sv.cls:'shade';
   if(sv.stats&&sv.stats.str){Object.assign(G.player.stats,sv.stats);G.player.pts=sv.pts||0}
   else G.player.pts=Math.max(0,(sv.level||1)-1)*5;
  }
