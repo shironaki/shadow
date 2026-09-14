@@ -91,7 +91,7 @@ function initIntro(){
  const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';
  $('nameWrap').style.display=sv?'none':'flex';
  const pick={sex:'m',cls:'shade'}; // v0.10: выбор пола и класса
- if(!sv){
+ {
   const cd2=$('clsDesc');if(cd2)cd2.textContent=CLASSES.shade.d;
   document.querySelectorAll('#sexRow .selBtn').forEach(b=>b.onclick=()=>{
    pick.sex=b.dataset.sex;document.querySelectorAll('#sexRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));drawPortrait(pick.sex)});
@@ -99,6 +99,8 @@ function initIntro(){
    pick.cls=b.dataset.cls;document.querySelectorAll('#clsRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));
    if(cd2)cd2.textContent=CLASSES[b.dataset.cls].d;SFX.ui()});
  }
+ let newArmed=!sv; // v0.10.1: при сейве «Новая игра» сначала раскрывает выбор героя
+ if(sv&&!newArmed)$('btnNew').textContent='НОВАЯ ИГРА…';
  $('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+
   `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА':'ВОЙТИ В МИР'}</button>`;
  $('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';
@@ -106,6 +108,8 @@ function initIntro(){
  const ni=$('nameInp');
  if(ni)ni.addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNew').click()});
  $('btnNew').onclick=()=>{
+  if(!newArmed){newArmed=true; // первый клик: показать выбор героя
+   $('nameWrap').style.display='flex';$('btnNew').textContent='НАЧАТЬ!';SFX.ui();return}
   try{['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].forEach(k=>localStorage.removeItem(k))}catch(e){}
   begin(false,$('nameInp')?$('nameInp').value:'',pick.sex,pick.cls);
  };

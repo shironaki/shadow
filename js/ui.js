@@ -271,8 +271,9 @@ function toast(msg,col){
 }
 function splash(t,s,red){$('splashT').textContent=t;$('splashS').textContent=s||'';
  const el=$('splash');el.classList.toggle('red',!!red);el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
-const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Путь Охотника»</h4>
-<b>v0.10 (текущая)</b> — ВЫБОР: пол (мужчина/женщина — своя фигурка и портрет) и классы Тень/Страж/Чародей. МИР: пол светлее, стены — светлые плиты с гранями и контактными тенями — проходы читаются. ГЕРОЙ: человечные пропорции (длинные ноги). АРИЗ: шанс виден и растёт с уровнем, провал не сжигает тело. Тени: leash 8 клеток. Лор очищен от чужих отсылок.<br>
+const PASSPORT_HTML=`<h4>Паспорт проекта · v${VER} «Чиби»</h4>
+<b>v0.10.1 (текущая)</b> — ЧИБИ-персонажи: пухлое тельце, короткие ножки, огромные глаза — герой (м/ж), все гуманоиды и мегабоссы; плащ героя убран; «Новая игра» при сейве раскрывает выбор героя.<br>
+<b>v0.10</b> — ВЫБОР: пол (мужчина/женщина — своя фигурка и портрет) и классы Тень/Страж/Чародей. МИР: пол светлее, стены — светлые плиты с гранями и контактными тенями — проходы читаются. ГЕРОЙ: человечные пропорции (длинные ноги). АРИЗ: шанс виден и растёт с уровнем, провал не сжигает тело. Тени: leash 8 клеток. Лор очищен от чужих отсылок.<br>
 <b>v0.9</b> — МОДУЛЬНЫЙ ДВИЖОК: 9 файлов js/ (ядро/данные/мир/спрайты/сущности/тени/бой/UI/главный) без шага сборки. Золотые <b style="color:#fbbf24">мега-врата</b> (после 9 зачисток): мегабоссы <b>Беллион</b> и <b>Беру</b>, победа + АРИЗ даёт тень-<b style="color:#f0abfc">Легенду</b> (ранг 5, ×2.7 силы). Полное управление армией: стойки <b>Штурм/Оборона/Стой</b> (V), приказ-цель — последний удар игрока, отзыв всех (T). Руда в подземельях: жилы выбиваются ударами (золото/материалы/самоцветы). Лут подбирается шире, магнит сильнее. Новый портрет и человечная фигурка героя, наклон корпуса по прицелу и движению.<br>
 <b>v0.8.1</b> — починен джойстик на телефоне (зона касаний не получала события), мобильная раскладка разведена по углам с учётом safe-area; у каждого ранга врат своя палитра подземелья.<br>
 <b>v0.8 (текущая)</b> — ВОССТАНОВЛЕН БОЙ ВРАГОВ: у мобов снова есть замах, маги стреляют болтами, Палач бьёт слэмом по площади; leash-агро; ввод навыков блокируется при открытых окнах; миникарта вписана в холст; NaN-защита HP в старых сейвах; автосейв при сворачивании вкладки; разблокировка звука на iOS; Enter в поле имени; фавикон.<br>
@@ -322,8 +323,8 @@ function humanoid(X,Y,o){
  if(o.flash>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(.75,o.flash*5);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(X,Y-20*sc,10*sc,20*sc,0,0,TAU);ctx.fill();ctx.restore()}
 }
-function capeDraw(X,Y,f,walk,moving,col,alpha){
- ctx.save();ctx.translate(X,Y-30);ctx.scale(f,1);
+function capeDraw(X,Y,f,walk,moving,col,alpha,h=17,s=.8){ // v0.10.1: чиби-плащик
+ ctx.save();ctx.translate(X,Y-h);ctx.scale(f*s,s);
  const w1=moving?Math.sin(walk*10)*3:Math.sin(walk*2)*1;
  const w2=moving?Math.sin(walk*10-1.2)*4:Math.sin(walk*2-1)*1.4;
  ctx.beginPath();ctx.moveTo(0,-4);
@@ -371,9 +372,9 @@ function drawPlayer(X,Y){
  if(ult)dGl(X,Y-24,42,'#a855f7',.35+.15*Math.sin(G.time*8));
  if(G.stealth>0){ctx.save();ctx.globalAlpha=.3+.15*Math.sin(G.time*7);ctx.strokeStyle='#93c5fd';ctx.lineWidth=1;
   ctx.beginPath();ctx.ellipse(X,Y,17,8,0,0,TAU);ctx.stroke();ctx.restore()}
- capeDraw(X,Y,p.face,p.walk,p.moving,ult?'#1d1145':'#0d0a22',.96*(G.stealth>0?.55:1));
- const tilt=(p.atkT>0||p.swingT>0)?.42*clamp(p.aimY,-1,1):clamp(p.aimY,-1,1)*.26+(p.moving?.13:0); // v0.9: корпус возвращает по прицелу/движению
- humanoid(X,Y,{tor:'tor_'+pal,head:'head_'+pal,arm:ult?'arm_claw':'arm_hero',leg:PALS[pal].leg,legW:fem?4.6:5.2,hs:1,hip:fem?20:21,hipX:fem?3:3.4,
+ // v0.10.1: плащ у героя убран — чиби читается без него
+ const tilt=(p.atkT>0||p.swingT>0)?.3*clamp(p.aimY,-1,1):clamp(p.aimY,-1,1)*.18+(p.moving?.1:0); // v0.10.1: чиби-наклон
+ humanoid(X,Y,{tor:'tor_'+pal,head:'head_'+pal,arm:ult?'arm_claw':'arm_hero',leg:PALS[pal].leg,legW:4.2,hs:1,hip:6,hipX:3,
   face:p.face,walk:p.walk,moving:p.moving,alpha:G.stealth>0?.4:.98,swing:p.swingT>0?1-p.swingT/.24:null,wind:0,armIdle:.8,tilt});
  if(G.whirl){ctx.save();ctx.translate(X,Y-14);
   for(let i=0;i<2;i++){ctx.rotate(G.time*10+i*Math.PI);
@@ -386,7 +387,7 @@ function drawPlayer(X,Y){
 function drawGhost(g2){
  const fem=G.player&&G.player.sex==='f';
  humanoid(w2sx(g2.x,g2.y),w2sy(g2.x,g2.y),{tor:fem?'tor_heroF':'tor_hero',head:fem?'head_heroF':'head_hero',arm:'arm_hero',
-  leg:'#120e2c',hs:1,hip:21,face:g2.face,walk:0,moving:false,alpha:.35*(1-g2.t/.35),wind:0});
+  leg:'#120e2c',hs:1,hip:6,face:g2.face,walk:0,moving:false,alpha:.35*(1-g2.t/.35),wind:0});
 }
 function houndDraw(X,Y,o){
  const bob=o.mv?Math.sin(o.walk*13)*1.3:Math.sin(o.walk*2)*.4;
@@ -421,11 +422,11 @@ function mageDraw(X,Y,o){
  if(o.flash>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(.75,o.flash*5);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(X,Y-22,9,16,0,0,TAU);ctx.fill();ctx.restore()}
 }
-const BARY={hound:30,mage:46,soldier:46,brute:56,knight:60,igirs:62,baran:64,kamish:64,bel:82,beru:74};
+const BARY={hound:30,mage:46,soldier:52,brute:62,knight:58,igirs:60,baran:64,kamish:74,bel:96,beru:88}; // v0.10.1: чиби
 function drawEnemy(e,X,Y){
  const windP=e.wind>0?1-e.wind/e.windMax:0;
  const swingP=e.swingT>0?1-e.swingT/.2:null;
- const etilt=e.wind>0?-.34*windP:swingP!=null?.38*swingP:(e.mv?.1:0); // v0.9: замах назад, выпад вперёд
+ const etilt=e.wind>0?-.26*windP:swingP!=null?.3*swingP:(e.mv?.08:0); // v0.10.1: чиби-наклоны мягче
  if(e.poison){ctx.save();ctx.globalAlpha=.5;ctx.strokeStyle='#84cc16';ctx.lineWidth=1;
   ctx.beginPath();ctx.ellipse(X,Y,12,5,0,0,TAU);ctx.stroke();ctx.restore()}
  if(e.type==='hound'){
@@ -441,22 +442,22 @@ function drawEnemy(e,X,Y){
   const kam=e.type==='kamish';
   sigil(X,Y,kam?30:26,kam?'#ffb347':'#ef4444');dGl(X,Y-10,30,kam?'#ffb347':'#ef4444',.16);lights.push({x:e.x,y:e.y,r:3,i:.35});
   humanoid(X,Y,{tor:kam?'tor_kam':'tor_brt',head:kam?'head_kam':'head_brt',arm:kam?'arm_kam':'arm_brt',
-   leg:kam?'#200b05':'#1c070c',legW:6.6,hs:1.04,face:e.face,walk:e.walk,moving:e.mv,
-   swing:swingP,wind:windP,scale:kam?1.55:1.42,armIdle:1.05,flash:e.flash,tilt:etilt});
+   leg:kam?'#200b05':'#1c070c',legW:5.2,hs:1,hip:7,face:e.face,walk:e.walk,moving:e.mv,
+   swing:swingP,wind:windP,scale:kam?1.32:1.22,armIdle:1.05,flash:e.flash,tilt:etilt});
  }else if(e.type==='bel'||e.type==='beru'){ // v0.9: мегабоссы
   const bel=e.type==='bel',pc=bel?'#fde68a':'#4ade80';
   sigil(X,Y,34,pc);dGl(X,Y-14,46,pc,.24);lights.push({x:e.x,y:e.y,r:5.5,i:.6});
-  if(bel)capeDraw(X,Y,e.face,e.walk,e.mv,'#2a1015',.92);
+  if(bel)capeDraw(X,Y,e.face,e.walk,e.mv,'#2a1015',.92,20,1);
   humanoid(X,Y,{tor:bel?'tor_bel':'tor_ber',head:bel?'head_bel':'head_ber',arm:bel?'arm_bel':'arm_ber',
-   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,hip:21,face:e.face,walk:e.walk,moving:e.mv,
-   swing:swingP,wind:windP,scale:bel?1.75:1.6,armIdle:.95,flash:e.flash,tilt:etilt});
+   leg:bel?'#170a10':'#0a1f14',legW:bel?5.6:5.2,hs:1,hip:7,face:e.face,walk:e.walk,moving:e.mv,
+   swing:swingP,wind:windP,scale:bel?1.5:1.4,armIdle:.95,flash:e.flash,tilt:etilt});
  }else{
   const kn=e.type!=='soldier';
   if(kn){sigil(X,Y,e.boss?30:24,'#38bdf8');dGl(X,Y-12,34,'#38bdf8',.2);lights.push({x:e.x,y:e.y,r:4.5,i:.5});
-   capeDraw(X,Y,e.face,e.walk,e.mv,'#101827',.9)}
+   capeDraw(X,Y,e.face,e.walk,e.mv,'#101827',.9,15)}
   humanoid(X,Y,{tor:'tor_'+(kn?'kn':'sol'),head:'head_'+(kn?'kn':'sol'),arm:'arm_'+(kn?'kn':'sol'),
-   leg:kn?'#10141f':'#200a10',legW:kn?5.4:5,hs:kn?1.12:1.08,face:e.face,walk:e.walk,moving:e.mv,
-   swing:swingP,wind:windP,scale:kn?1.22:1,armIdle:.95,flash:e.flash,tilt:etilt});
+   leg:kn?'#10141f':'#200a10',legW:kn?4.8:4.4,hs:1,hip:6,face:e.face,walk:e.walk,moving:e.mv,
+   swing:swingP,wind:windP,scale:kn?1.14:1,armIdle:.95,flash:e.flash,tilt:etilt});
  }
  if(e.hp<e.maxhp||e.aggro){
   const w=e.boss?44:e.elite?34:22,y=Y-(BARY[e.type]||46);
@@ -476,7 +477,7 @@ function drawShadow(s,X,Y){
   ctx.strokeStyle=GDCOL[s.grade];ctx.lineWidth=1.2;ctx.setLineDash([6,6]);
   ctx.beginPath();ctx.ellipse(0,0,15,7,0,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
  const swingP=s.swingT>0?1-s.swingT/.2:null;
- if(s.grade>=3)capeDraw(X,yy,s.face,s.walk,true,s.type==='bel'?'#2a1015':s.type==='beru'?'#0a1f14':s.type==='knight'||s.type==='igirs'?'#1e3a5f':'#172554',.8*al);
+ if(s.grade>=3)capeDraw(X,yy,s.face,s.walk,true,s.type==='bel'?'#2a1015':s.type==='beru'?'#0a1f14':s.type==='knight'||s.type==='igirs'?'#1e3a5f':'#172554',.8*al,15);
  if(s.grade>=4){ctx.save();ctx.translate(X,yy);ctx.rotate(G.time*1.2);ctx.globalAlpha=.5; // v0.9: аура Легенды
   ctx.strokeStyle=GDCOL[4];ctx.lineWidth=1.6;ctx.setLineDash([3,7]);
   ctx.beginPath();ctx.ellipse(0,4,19,9,0,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();
@@ -486,18 +487,18 @@ function drawShadow(s,X,Y){
  }else if(s.type==='mage'||s.type==='baran'){
   mageDraw(X,Y,{key:s.type==='baran'?'bar':'shm',face:s.face,windP:0,flash:s.flash,seed:s.walk,wx:s.x,wy:s.y,alpha:al});
  }else if(s.type==='knight'||s.type==='igirs'){
-  humanoid(X,yy,{tor:'tor_kn',head:'head_kn',arm:'arm_kn',leg:'#10141f',legW:5.4,hs:1.1,face:s.face,walk:s.walk,moving:true,
-   swing:swingP,wind:0,scale:1.15,armIdle:.95,alpha:al,flash:s.flash});
+  humanoid(X,yy,{tor:'tor_kn',head:'head_kn',arm:'arm_kn',leg:'#10141f',legW:4.6,hs:1,hip:6,face:s.face,walk:s.walk,moving:true,
+   swing:swingP,wind:0,scale:1.05,armIdle:.95,alpha:al,flash:s.flash});
  }else if(s.type==='bel'||s.type==='beru'){ // v0.9: тени-легенды
   const bel=s.type==='bel';
   humanoid(X,yy,{tor:bel?'tor_bel':'tor_ber',head:bel?'head_bel':'head_ber',arm:bel?'arm_bel':'arm_ber',
-   leg:bel?'#170a10':'#0a1f14',legW:bel?7:6.4,hs:1.06,hip:21,face:s.face,walk:s.walk,moving:true,
-   swing:swingP,wind:0,scale:bel?1.6:1.45,armIdle:.95,alpha:al,flash:s.flash});
+   leg:bel?'#170a10':'#0a1f14',legW:bel?5.6:5.2,hs:1,hip:7,face:s.face,walk:s.walk,moving:true,
+   swing:swingP,wind:0,scale:bel?1.35:1.25,armIdle:.95,alpha:al,flash:s.flash});
  }else if(s.type==='kamish'){
-  humanoid(X,yy,{tor:'tor_kam',head:'head_kam',arm:'arm_kam',leg:'#200b05',legW:6.4,hs:1.04,face:s.face,walk:s.walk,moving:true,
-   swing:swingP,wind:0,scale:1.4,armIdle:1.05,alpha:al,flash:s.flash});
+  humanoid(X,yy,{tor:'tor_kam',head:'head_kam',arm:'arm_kam',leg:'#200b05',legW:5,hs:1,hip:7,face:s.face,walk:s.walk,moving:true,
+   swing:swingP,wind:0,scale:1.2,armIdle:1.05,alpha:al,flash:s.flash});
  }else{
-  humanoid(X,yy,{tor:'tor_shs',head:'head_shs',arm:'arm_shs',leg:'#0a1530',legW:5,hs:1.06,face:s.face,walk:s.walk,moving:true,
+  humanoid(X,yy,{tor:'tor_shs',head:'head_shs',arm:'arm_shs',leg:'#0a1530',legW:4.4,hs:1,hip:6,face:s.face,walk:s.walk,moving:true,
    swing:swingP,wind:0,scale:1,armIdle:.95,alpha:al,flash:s.flash});
  }
  const w=22,y=yy-46-(s.type==='kamish'?18:s.type==='knight'||s.type==='igirs'?12:0);
