@@ -101,9 +101,8 @@ function initIntro(){
    if(cd2)cd2.textContent=CLASSES[b.dataset.cls].d;SFX.ui()});
  }
  let newArmed=!sv; // v0.10.1: при сейве «Новая игра» сначала раскрывает выбор героя
- if(sv&&!newArmed)$('btnNew').textContent='НОВАЯ ИГРА…';
  $('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+
-  `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА':'ВОЙТИ В МИР'}</button>`;
+  `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА…':'ВОЙТИ В МИР'}</button>`; // v0.11.1: текст в шаблоне — FIX «Cannot set properties of null (textContent)» при загрузке с сейвом
  $('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';
  if(sv)$('btnCont').onclick=()=>begin(true);
  const ni=$('nameInp');
