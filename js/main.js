@@ -17,10 +17,9 @@ function loadGame(){
   if(!d)return false;
   G.seed=d.seed;G.questSeq=d.questSeq||0;Object.assign(G.counters,d.counters||{});
   G.counters.army=G.army?G.counters.army||1:1;
-  G.riseBonus=d.riseBonus||0;G.tutArise=!!d.tutArise;
- G.stance=STANCES[d.stance]?d.stance:'assault'; // v0.9: стойка армии
+ G.riseBonus=d.riseBonus||0;G.tutArise=!!d.tutArise;
+ G.stance=STANCES[d.stance]?d.stance:'assault';
   G.daily=d.daily&&d.daily.d===todayStr()?d.daily:null;
-  // армия (v7: {lvl,cnt}; v5/v6: поле army было массивом теней)
   if(d.army7)G.army=d.army7;
   else if(d.army&&typeof d.army.lvl==='number')G.army={lvl:clamp(d.army.lvl,1,AMAX_LV),cnt:d.army.cnt||0};
   else G.army={lvl:1,cnt:0};
@@ -40,93 +39,102 @@ function loadGame(){
 }
 function hasSave(){try{return ['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].some(k=>!!localStorage.getItem(k))}catch(e){return false}}
 /* СТАРТ */
-function startWorld(){
- G.mode='hub';G.hubGate=null;G.gateT=8;
- genHub();placePlayer();
-}
+function startWorld(){G.mode='hub';G.hubGate=null;G.gateT=8;genHub();placePlayer()}
 function begin(cont,name,sex,cls){
  if(G.started)return;
- AU.unlock();
- cvs.classList.toggle('fx',SET.filter);
+ AU.unlock();cvs.classList.toggle('fx',SET.filter);
  if(cont&&loadGame()){log('system','Прогресс загружен. С возвращением, '+(G.player.name||'Владыка')+'.')}
- else{G.seed=(Date.now()%1e9)||12345;newPlayer(null);
-  G.player.sex=(sex==='f'?'f':'m');G.player.cls=CLASSES[cls]?cls:'shade'; // v0.10: пол и класс
-  G.player.name=(name||'').trim().slice(0,16)||(G.player.sex==='f'?'Охотница':'Охотник');
-  inv=[];const w=makeItem('weapon',1,0);addItem(w);equipped.weapon=w;
-  addItem(makeItem('potionHP',1));addItem(makeItem('potionHP',1));addItem(makeItem('potionMP',1));
-  G.shadows=[];G.army={lvl:1,cnt:0};G.counters={kills:0,summons:0,elites:0,crystals:0,gates:0,army:1};
-  G.questSeq=0;G.riseBonus=0;
-  initQuests();
-  log('story','Вы в <b>Мире</b> — точке сбора охотников. Ждите врата.');
-  log('system','<b>Система:</b> врата открываются в случайных местах. Ранг врат определяет опасность и награду. «АРИЗ!» (X) у тел — ваша армия теней.');
-  sysNotify('СИСТЕМА',['Добро пожаловать, Охотник <b>'+G.player.name+'</b>.','Вы стали Игроком. Первые врата откроются через несколько секунд.']);}
- if(!G.quests.length)initQuests();
- if(typeof updateStanceChip==='function')updateStanceChip(); // v0.9: чип стойки по сейву
- if(typeof refreshSkillbar==='function')refreshSkillbar(); // v0.11: скиллбар по классу героя
- ensureDaily();
- calcStats();startWorld();
- const act=activeShadows();
- if(act.length){act.forEach((s,i)=>{const a=i*TAU/act.length;s.x=G.player.x+Math.cos(a)*1.2;s.y=G.player.y+Math.sin(a)*.8})}
- G.started=true;G.paused=false;
- $('intro').style.display='none';
- document.body.classList.toggle('touch',input.touchMode);
- applyJoySide();
- splash('МИР','ТОЧКА СБОРА ОХОТНИКОВ');
- saveGame();
+ else{G.seed=(Date.now()%1e9)||12345;newPlayer(null);G.player.sex=(sex==='f'?'f':'m');G.player.cls=CLASSES[cls]?cls:'shade';G.player.name=(name||'').trim().slice(0,16)||(G.player.sex==='f'?'Охотница':'Охотник');inv=[];const w=makeItem('weapon',1,0);addItem(w);equipped.weapon=w;addItem(makeItem('potionHP',1));addItem(makeItem('potionHP',1));addItem(makeItem('potionMP',1));G.shadows=[];G.army={lvl:1,cnt:0};G.counters={kills:0,summons:0,elites:0,crystals:0,gates:0,army:1};G.questSeq=0;G.riseBonus=0;initQuests();log('story','Вы в <b>Мире</b> — точке сбора охотников. Ждите врата.');log('system','<b>Система:</b> врата открываются в случайных местах. Ранг врат определяет опасность и награду. «АРИЗ!» (X) у тел — ваша армия теней.');sysNotify('СИСТЕМА',['Добро пожаловать, Охотник <b>'+G.player.name+'</b>.','Вы стали Игроком. Первые врата откроются через несколько секунд.'])}
+ if(!G.quests.length)initQuests();
+ if(typeof updateStanceChip==='function')updateStanceChip();if(typeof refreshSkillbar==='function')refreshSkillbar();ensureDaily();calcStats();startWorld();
+ const act=activeShadows();if(act.length){act.forEach((s,i)=>{const a=i*TAU/act.length;s.x=G.player.x+Math.cos(a)*1.2;s.y=G.player.y+Math.sin(a)*.8})}
+ G.started=true;G.paused=false;$('intro').style.display='none';document.body.classList.toggle('touch',input.touchMode);applyJoySide();splash('МИР','ТОЧКА СБОРА ОХОТНИКОВ');saveGame();
 }
-$('btnRespawn').onclick=()=>{
- const p=G.player;p.dead=false;p.hp=p.maxhp*.7;p.mp=p.maxmp*.5;
- p.gold=Math.round(p.gold*.9);
- G.enemies=[];G.projs=[];G.loots=[];G.corpses=[];G.hands=[];G.strikes=[];G.whirl=null;G.rifts=[];G.bastion=0;
- G.shadows.forEach(s=>{s.hp=s.maxhp});
- // смерть возвращает в Мир; врата считаются проваленными
- startWorld();
- document.body.classList.remove('cine');
- log('system','Тьма отвергла вашу смерть. <b>Вы вернулись в Мир</b> (−10% золота). Врата рассеялись.');
- $('deathOv').style.display='none';saveGame();
-};
-function initIntro(){
- drawPortrait();
- const sv=hasSave();
- const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки вашего класса · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';
- const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';
- $('nameWrap').style.display=sv?'none':'flex';
- const pick={sex:'m',cls:'shade'}; // v0.10: выбор пола и класса
- {
-  const cd2=$('clsDesc');if(cd2)cd2.textContent=CLASSES.shade.d;
-  document.querySelectorAll('#sexRow .selBtn').forEach(b=>b.onclick=()=>{
-   pick.sex=b.dataset.sex;document.querySelectorAll('#sexRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));drawPortrait(pick.sex)});
-  document.querySelectorAll('#clsRow .selBtn').forEach(b=>b.onclick=()=>{
-   pick.cls=b.dataset.cls;document.querySelectorAll('#clsRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));
-   if(cd2)cd2.textContent=CLASSES[b.dataset.cls].d;SFX.ui()});
- }
- let newArmed=!sv; // v0.10.1: при сейве «Новая игра» сначала раскрывает выбор героя
- $('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+
-  `<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА…':'ВОЙТИ В МИР'}</button>`; // v0.11.1: текст в шаблоне — FIX «Cannot set properties of null (textContent)» при загрузке с сейвом
- $('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';
- if(sv)$('btnCont').onclick=()=>begin(true);
- const ni=$('nameInp');
- if(ni)ni.addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNew').click()});
- $('btnNew').onclick=()=>{
-  if(!newArmed){newArmed=true; // первый клик: показать выбор героя
-   $('nameWrap').style.display='flex';$('btnNew').textContent='НАЧАТЬ!';SFX.ui();return}
-  try{['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].forEach(k=>localStorage.removeItem(k))}catch(e){}
-  begin(false,$('nameInp')?$('nameInp').value:'',pick.sex,pick.cls);
- };
-}
+$('btnRespawn').onclick=()=>{const p=G.player;p.dead=false;p.hp=p.maxhp*.7;p.mp=p.maxmp*.5;p.gold=Math.round(p.gold*.9);G.enemies=[];G.projs=[];G.loots=[];G.corpses=[];G.hands=[];G.strikes=[];G.whirl=null;G.rifts=[];G.bastion=0;G.shadows.forEach(s=>{s.hp=s.maxhp});startWorld();document.body.classList.remove('cine');log('system','Тьма отвергла вашу смерть. <b>Вы вернулись в Мир</b> (−10% золота). Врата рассеялись.');$('deathOv').style.display='none';saveGame()};
+function initIntro(){drawPortrait();const sv=hasSave();const hintPC='<b>WASD</b> — движение · <b>ЛКМ</b> — комбо кинжалами · <b>Q/E/R/F</b> — навыки вашего класса · <b>X</b> — АРИЗ! · <b>V</b> — стойка теней · <b>T</b> — отзыв теней · <b>C</b> — Обмен · <b>SPACE</b> — Пробуждение · <b>Tab</b> — сумка · <b>E</b> — врата/выход';const hintMB='<b>Джойстик</b> — движение · <b>красная</b> — атака · <b>синяя «АРИЗ!»</b> у тел · <b>Тени</b> — армия, стойки и хранилище';$('nameWrap').style.display=sv?'none':'flex';const pick={sex:'m',cls:'shade'};{const cd2=$('clsDesc');if(cd2)cd2.textContent=CLASSES.shade.d;document.querySelectorAll('#sexRow .selBtn').forEach(b=>b.onclick=()=>{pick.sex=b.dataset.sex;document.querySelectorAll('#sexRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));drawPortrait(pick.sex)});document.querySelectorAll('#clsRow .selBtn').forEach(b=>b.onclick=()=>{pick.cls=b.dataset.cls;document.querySelectorAll('#clsRow .selBtn').forEach(x=>x.classList.toggle('on',x===b));if(cd2)cd2.textContent=CLASSES[b.dataset.cls].d;SFX.ui()})}let newArmed=!sv;$('introBtns').innerHTML=(sv?'<button class="ibtn" id="btnCont">ПРОДОЛЖИТЬ</button>':'')+`<button class="ibtn" id="btnNew">${sv?'НОВАЯ ИГРА…':'ВОЙТИ В МИР'}</button>`;$('introHint').innerHTML=(input.touchMode?hintMB:hintPC)+'<br><span style="opacity:.6">Врата рангов E→S открываются в разных местах Мира · Алые врата = Дворцы Демонов</span>';if(sv)$('btnCont').onclick=()=>begin(true);const ni=$('nameInp');if(ni)ni.addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNew').click()});$('btnNew').onclick=()=>{if(!newArmed){newArmed=true;$('nameWrap').style.display='flex';$('btnNew').textContent='НАЧАТЬ!';SFX.ui();return}try{['shadow_ascension_v4','shadow_ascension_v3','shadow_ascension_v2'].forEach(k=>localStorage.removeItem(k))}catch(e){}begin(false,$('nameInp')?$('nameInp').value:'',pick.sex,pick.cls)}}
 let lastT=performance.now();
-function loop(t){
- requestAnimationFrame(loop);
- const rdt=Math.min(.05,(t-lastT)/1000);lastT=t;
- G.fps=lerp(G.fps,1/Math.max(.001,rdt),.06);
- let dt=rdt;
- if(G.hitstop>0){G.hitstop-=rdt;dt*=.15}
- try{if(G.started&&!G.paused)update(dt)}catch(e){showErr('update: '+e.message)}
- try{render()}catch(e){showErr('render: '+e.message);if(!M.cv&&M.grid){try{prerender(G.mode==='hub'?9999:G.gateDiff)}catch(_){}}}
- updateHUD();
-}
-initIntro();
-requestAnimationFrame(loop);
-addEventListener('beforeunload',()=>{if(G.started)saveGame()});
-addEventListener('pagehide',()=>{if(G.started)saveGame()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.started)saveGame()});
+function loop(t){requestAnimationFrame(loop);const rdt=Math.min(.05,(t-lastT)/1000);lastT=t;G.fps=lerp(G.fps,1/Math.max(.001,rdt),.06);let dt=rdt;if(G.hitstop>0){G.hitstop-=rdt;dt*=.15}try{if(G.started&&!G.paused)update(dt)}catch(e){showErr('update: '+e.message)}try{render()}catch(e){showErr('render: '+e.message);if(!M.cv&&M.grid){try{prerender(G.mode==='hub'?9999:G.gateDiff)}catch(_) {}}}updateHUD()}
+initIntro();requestAnimationFrame(loop);addEventListener('beforeunload',()=>{if(G.started)saveGame()});addEventListener('pagehide',()=>{if(G.started)saveGame()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.started)saveGame()});
+
+/* Production Kit character rendering integration.
+ * This adapter only observes existing gameplay state; it does not own movement/combat.
+ */
+(function(){
+  const MANIFEST_URL='assets/manifest.json';
+  const CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};
+  let manifest=null, renderer=null, characterKey='';
+  let legacyDrawPlayer=window.drawPlayer;
+  let loadFailed=false;
+  const rendererReady=import('./character-renderer.js').catch(e=>{loadFailed=true;console.warn('[CharacterRenderer] script load failed:',e)});
+
+  function characterId(p){
+    const cls=CLASS_MAP[p.cls]||'assassin';
+    return cls+'_'+(p.sex==='f'?'female':'male');
+  }
+
+  function animationState(p){
+    if(p.dead)return 'death';
+    if(G.hurtT>0)return 'hurt';
+    if(p.atkT>0||p.swingT>0)return 'attack';
+    return p.moving?'walk':'idle';
+  }
+
+  function syncRenderer(){
+    if(!renderer||!G.player)return;
+    const p=G.player;
+    const id=characterId(p);
+    if(id!==characterKey){
+      characterKey=id;
+      renderer=null;
+      loadCharacter(id);
+      return;
+    }
+    const state=animationState(p);
+    if(state==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');
+    else if(state==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');
+    else if(state==='death'&&renderer.state!=='death')renderer.playOnce('death');
+    else if(state==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');
+    else if(state==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');
+    if(p.face!==undefined)renderer.flipX=p.face<0;
+  }
+
+  async function loadCharacter(id){
+    if(!manifest)return;
+    await rendererReady;
+    if(loadFailed||typeof CharacterRenderer!=='function')return;
+    try{
+      const next=new CharacterRenderer(ctx,manifest,id,{scale:.34,anchorY:1,shadow:true});
+      await next.loading;
+      if(id===characterKey)renderer=next;
+    }catch(e){
+      loadFailed=true;
+      console.warn('[CharacterRenderer] sprite load failed:',e);
+    }
+  }
+
+  const gameplayUpdate=window.update;
+  window.update=function(dt){
+    gameplayUpdate(dt);
+    syncRenderer();
+    if(renderer)renderer.update(dt*1000);
+  };
+
+  window.drawPlayer=function(X,Y){
+    if(renderer&&!loadFailed){
+      renderer.draw({x:X,y:Y,scale:.34,alpha:G.stealth>0?.4:.98});
+      return;
+    }
+    if(legacyDrawPlayer)legacyDrawPlayer(X,Y);
+  };
+
+  fetch(MANIFEST_URL,{cache:'no-cache'}).then(r=>{
+    if(!r.ok)throw new Error('manifest HTTP '+r.status);
+    return r.json();
+  }).then(m=>{
+    manifest=m;
+    if(G.player){characterKey=characterId(G.player);loadCharacter(characterKey)}
+  }).catch(e=>{
+    loadFailed=true;
+    console.warn('[CharacterRenderer] manifest load failed:',e);
+  });
+})();
