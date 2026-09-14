@@ -119,3 +119,87 @@ class CharacterRenderer {
 }
 
 window.CharacterRenderer = CharacterRenderer;
+
+/*
+ * Startup adapter: the game starts from the intro screen, while manifest.json
+ * usually finishes loading before G.player exists. The original main.js hook
+ * only attempted to create a renderer from the manifest callback, so that
+ * normal race left the legacy procedural player active forever. This adapter
+ * only observes gameplay state and delegates all drawing to CharacterRenderer.
+ */
+(function(){
+  const MANIFEST_URL='assets/manifest.json';
+  const CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};
+  let manifest=null;
+  let renderer=null;
+  let loadingId='';
+  let failed=false;
+
+  const legacyDrawPlayer=window.drawPlayer;
+  const legacyUpdate=window.update;
+
+  function characterId(p){
+    const cls=CLASS_MAP[p.cls]||'assassin';
+    return cls+'_'+(p.sex==='f'?'female':'male');
+  }
+
+  function stateFor(p){
+    if(p.dead)return 'death';
+    if(G.hurtT>0)return 'hurt';
+    if(p.atkT>0||p.swingT>0)return 'attack';
+    return p.moving?'walk':'idle';
+  }
+
+  async function ensureRenderer(){
+    if(failed||!manifest||!G.player)return;
+    const id=characterId(G.player);
+    if(renderer&&renderer.characterId===id)return;
+    if(loadingId===id)return;
+    loadingId=id;
+    try{
+      const next=new CharacterRenderer(ctx,manifest,id,{scale:.34,anchorY:1,shadow:true});
+      await next.loading;
+      if(G.player&&characterId(G.player)===id)renderer=next;
+    }catch(e){
+      failed=true;
+      console.warn('[CharacterRenderer] sprite load failed:',e);
+    }finally{
+      if(loadingId===id)loadingId='';
+    }
+  }
+
+  function sync(){
+    if(!G.player)return;
+    ensureRenderer();
+    if(!renderer)return;
+    const state=stateFor(G.player);
+    if(state==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');
+    else if(state==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');
+    else if(state==='death'&&renderer.state!=='death')renderer.playOnce('death');
+    else if(state==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');
+    else if(state==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');
+    if(G.player.face!==undefined)renderer.flipX=G.player.face<0;
+  }
+
+  window.update=function(dt){
+    legacyUpdate(dt);
+    sync();
+    if(renderer)renderer.update(dt*1000);
+  };
+
+  window.drawPlayer=function(X,Y){
+    if(renderer&&!failed){
+      renderer.draw({x:X,y:Y,scale:.34,alpha:G.stealth>0?.4:.98});
+      return;
+    }
+    if(legacyDrawPlayer)legacyDrawPlayer(X,Y);
+  };
+
+  fetch(MANIFEST_URL,{cache:'no-cache'}).then(r=>{
+    if(!r.ok)throw new Error('manifest HTTP '+r.status);
+    return r.json();
+  }).then(m=>{manifest=m;sync()}).catch(e=>{
+    failed=true;
+    console.warn('[CharacterRenderer] manifest load failed:',e);
+  });
+})();
