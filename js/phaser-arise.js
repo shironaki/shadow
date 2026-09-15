@@ -1,5 +1,5 @@
 'use strict';
-/* Shadow Ascension · Arise presentation v0.5 · pass orchestrator */
+/* Shadow Ascension · Arise presentation v0.6 · pass orchestrator */
 (function(){
  const get=n=>{try{return globalThis.eval(n)}catch(_){return null}};
  const arr=v=>Array.isArray(v)?v:[];
@@ -16,7 +16,7 @@
   apex.ariseStats={shadows:shadows.length,corpses:corpses.length,known:known.size,dt};requestAnimationFrame(tick)
  }
  function loadPasses(){
-  const names=['phaser-boss-telegraph.js?v=0.1.0','phaser-arena-atmosphere.js?v=0.1.0','phaser-vitals.js?v=0.1.0','phaser-mobile-polish.js?v=0.1.0','phaser-combat-impact.js?v=0.1.0','phaser-portal-fx.js?v=0.1.0','phaser-hero-trail.js?v=0.1.0','phaser-levelup.js?v=0.1.0','phaser-target-ring.js?v=0.1.0','phaser-death-burst.js?v=0.1.0','phaser-visual-qa.js?v=0.1.0'];
+  const names=['phaser-boss-telegraph.js?v=0.1.0','phaser-arena-atmosphere.js?v=0.1.0','phaser-vitals.js?v=0.1.0','phaser-mobile-polish.js?v=0.1.0','phaser-combat-impact.js?v=0.1.0','phaser-portal-fx.js?v=0.1.0','phaser-hero-trail.js?v=0.1.0','phaser-levelup.js?v=0.1.0','phaser-target-ring.js?v=0.1.0','phaser-death-burst.js?v=0.1.0','phaser-room-details.js?v=0.1.0','phaser-visual-qa.js?v=0.1.0'];
   Promise.all(names.map(src=>import('./'+src).catch(e=>console.warn('[shadow] visual pass failed',src,e))));
  }
  function start(){if(started)return;started=true;loadPasses();requestAnimationFrame(tick)}
