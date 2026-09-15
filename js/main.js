@@ -1,6 +1,9 @@
 'use strict';
 /* Production Kit renderer is the only character integration layer. */
-import('./character-renderer.js?v=0.12.7').catch(e=>console.warn('[CharacterRenderer] load failed:',e));
+import('./character-renderer.js?v=0.13.1').catch(e=>console.warn('[CharacterRenderer] load failed:',e));
+/* Presentation and verification layers stay outside gameplay logic. */
+import('./visual-upgrade.js?v=0.13.1').catch(e=>console.warn('[VisualUpgrade] load failed:',e));
+import('./qa.js?v=0.13.1').catch(e=>console.warn('[ShadowQA] load failed:',e));
 /* ═══ ГЛАВНЫЙ: сохранения, старт игры, игровой цикл ═══ */
 const SKEY='shadow_ascension_v4';
 function saveGame(){if(!G.player)return;try{localStorage.setItem(SKEY,JSON.stringify({v:7,seed:G.seed,questSeq:G.questSeq,tutArise:G.tutArise,counters:G.counters,riseBonus:G.riseBonus,daily:G.daily,army:G.army,stance:G.stance||'assault',p:{name:G.player.name||'',level:G.player.level,exp:G.player.exp,gold:G.player.gold,crystals:G.player.crystals,essence:G.player.essence,fury:G.player.fury,hp:G.player.hp,mp:G.player.mp,skillLv:G.player.skillLv,stats:G.player.stats,pts:G.player.pts,sex:G.player.sex||'m',cls:G.player.cls||'shade'},inv:inv,eq:{weapon:equipped.weapon?equipped.weapon.uid:0,armor:equipped.armor?equipped.armor.uid:0,ring:equipped.ring?equipped.ring.uid:0,relic:equipped.relic?equipped.relic.uid:0},shadows:G.shadows.map(s=>({type:s.type,lvl:s.lvl,hp:Math.round(s.hp),grade:s.grade||0,bench:!!s.bench})),set:SET}))}catch(e){}}
