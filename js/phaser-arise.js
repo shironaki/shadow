@@ -1,5 +1,5 @@
 'use strict';
-/* Shadow Ascension · Arise presentation v0.6 · pass orchestrator */
+/* Shadow Ascension · Arise presentation v1.0 · mega pass orchestrator */
 (function(){
  const get=n=>{try{return globalThis.eval(n)}catch(_){return null}};
  const arr=v=>Array.isArray(v)?v:[];
@@ -13,12 +13,9 @@
   shadows.forEach((sh,i)=>{if(!sh)return;const id=String(sh.uid??sh.id??i);current.add(id);if(!known.has(id)){known.add(id);const p=iso(num(sh.x),num(sh.y),s);burst(scene,p);silhouette(scene,p);label(scene,p)}});
   corpses.forEach((c,i)=>{if(!c)return;const id='c:'+String(c.uid??c.id??i);if(fx.has(id))return;fx.add(id);burst(scene,iso(num(c.x),num(c.y),s))});
   if(known.size>128)for(const id of known)if(!current.has(id))known.delete(id);
-  apex.ariseStats={shadows:shadows.length,corpses:corpses.length,known:known.size,dt};requestAnimationFrame(tick)
+  apex.ariseStats={version:'1.0.0',shadows:shadows.length,corpses:corpses.length,known:known.size,dt};requestAnimationFrame(tick)
  }
- function loadPasses(){
-  const names=['phaser-boss-telegraph.js?v=0.1.0','phaser-arena-atmosphere.js?v=0.1.0','phaser-vitals.js?v=0.1.0','phaser-mobile-polish.js?v=0.1.0','phaser-combat-impact.js?v=0.1.0','phaser-portal-fx.js?v=0.1.0','phaser-hero-trail.js?v=0.1.0','phaser-levelup.js?v=0.1.0','phaser-target-ring.js?v=0.1.0','phaser-death-burst.js?v=0.1.0','phaser-room-details.js?v=0.1.0','phaser-visual-qa.js?v=0.1.0'];
-  Promise.all(names.map(src=>import('./'+src).catch(e=>console.warn('[shadow] visual pass failed',src,e))));
- }
+ function loadPasses(){const names=['phaser-boss-telegraph.js?v=0.1.0','phaser-arena-atmosphere.js?v=0.1.0','phaser-vitals.js?v=0.1.0','phaser-mobile-polish.js?v=0.1.0','phaser-combat-impact.js?v=0.1.0','phaser-portal-fx.js?v=0.1.0','phaser-hero-trail.js?v=0.1.0','phaser-levelup.js?v=0.1.0','phaser-target-ring.js?v=0.1.0','phaser-death-burst.js?v=0.1.0','phaser-room-details.js?v=0.1.0','phaser-apex-overhaul.js?v=1.0.0','phaser-visual-qa.js?v=0.1.0'];Promise.all(names.map(src=>import('./'+src).catch(e=>console.warn('[shadow] visual pass failed',src,e))));}
  function start(){if(started)return;started=true;loadPasses();requestAnimationFrame(tick)}
  window.addEventListener('shadow-start-phaser',start);window.addEventListener('load',()=>setTimeout(start,850));
 })();
