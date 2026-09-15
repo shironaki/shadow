@@ -74,6 +74,28 @@
         "hurt": "assets/characters-gen/mage/female/hurt.png",
         "death": "assets/characters-gen/mage/female/death.png"
       }
+    },
+    "assassin_male": {
+      "class": "assassin",
+      "gender": "male",
+      "sprites": {
+        "idle": "assets/characters-gen/assassin/male/idle.png",
+        "walk": "assets/characters-gen/assassin/male/walk.png",
+        "attack": "assets/characters-gen/assassin/male/attack.png",
+        "hurt": "assets/characters-gen/assassin/male/hurt.png",
+        "death": "assets/characters-gen/assassin/male/death.png"
+      }
+    },
+    "assassin_female": {
+      "class": "assassin",
+      "gender": "female",
+      "sprites": {
+        "idle": "assets/characters-gen/assassin/female/idle.png",
+        "walk": "assets/characters-gen/assassin/female/walk.png",
+        "attack": "assets/characters-gen/assassin/female/attack.png",
+        "hurt": "assets/characters-gen/assassin/female/hurt.png",
+        "death": "assets/characters-gen/assassin/female/death.png"
+      }
     }
   }
 }

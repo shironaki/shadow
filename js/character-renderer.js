@@ -25,20 +25,25 @@ window.CharacterRenderer=CharacterRenderer;
 (function(){
   if(window.__shadowCharacterRendererInstalled)return;
   window.__shadowCharacterRendererInstalled=true;
-  const MANIFEST_URL=(typeof SET!=='undefined'&&SET.sprites==='gen')?'assets/manifest-gen.json':'assets/manifest.json',CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};
+  const CLASS_MAP={shade:'assassin',ward:'warrior',mage:'mage'};
   let manifest=null,renderer=null,loadingId='',loadToken=0,updateHookInstalled=false;
-  let visualFrame=0,drawnFrame=-1;
+  let visualFrame=0,drawnFrame=-1,loadedSprites='';
+  const spriteSet=()=>(typeof SET!=='undefined'&&SET.sprites)||'user';
+  const manifestUrl=()=>spriteSet()==='gen'?'assets/manifest-gen.json':'assets/manifest.json';
+  function loadManifest(){loadedSprites=spriteSet();manifest=null;renderer=null;loadToken++;loadingId='';
+    fetch(manifestUrl(),{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('manifest HTTP '+r.status);return r.json()}).then(m=>{manifest=m;sync()}).catch(e=>console.warn('[CharacterRenderer] manifest load failed:',e))}
   function game(){try{return globalThis.eval('G')}catch(_){return null}}
   function context(){try{return globalThis.eval('ctx')}catch(_){const cv=document.getElementById('cv');return cv?cv.getContext('2d'):null}}
   function characterId(p){return (CLASS_MAP[p.cls]||'assassin')+'_'+(p.sex==='f'?'female':'male')}
   function stateFor(p){const g=game();if(p.dead)return'death';if(g&&g.hurtT>0)return'hurt';if(p.atkT>0||p.swingT>0)return'attack';return p.moving?'walk':'idle'}
   async function ensureRenderer(){const g=game();if(!manifest||!g||!g.player)return;const id=characterId(g.player);if(renderer&&renderer.characterId===id)return;if(loadingId===id)return;loadingId=id;const token=++loadToken;renderer=null;try{const next=new CharacterRenderer(context(),manifest,id,{scale:.34,anchorY:1,shadow:true});await next.loading;if(token!==loadToken)return;const cur=game();if(cur&&cur.player&&characterId(cur.player)===id)renderer=next}catch(e){if(token===loadToken)console.warn('[CharacterRenderer] sprite load failed:',e)}finally{if(loadingId===id)loadingId=''}}
-  function sync(){const g=game();if(!g||!g.player)return;ensureRenderer();if(!renderer)return;const st=stateFor(g.player);if(st==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');else if(st==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');else if(st==='death'&&renderer.state!=='death')renderer.playOnce('death');else if(st==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');else if(st==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');if(g.player.face!==undefined)renderer.flipX=g.player.face<0}
+  function sync(){if(spriteSet()!==loadedSprites)loadManifest();const g=game();if(!g||!g.player||!manifest)return;ensureRenderer();if(!renderer)return;const st=stateFor(g.player);if(st==='attack'&&renderer.state!=='attack')renderer.playOnce('attack');else if(st==='hurt'&&renderer.state!=='hurt')renderer.playOnce('hurt');else if(st==='death'&&renderer.state!=='death')renderer.playOnce('death');else if(st==='walk'&&renderer.state!=='walk')renderer.setAnimation('walk');else if(st==='idle'&&renderer.state!=='idle'&&renderer.done)renderer.setAnimation('idle');if(g.player.face!==undefined)renderer.flipX=g.player.face<0}
   function nextVisualFrame(){visualFrame++;requestAnimationFrame(nextVisualFrame)}
   requestAnimationFrame(nextVisualFrame);
-  window.__shadowCharacterDraw=function(X,Y){if(drawnFrame===visualFrame)return;drawnFrame=visualFrame;const g=game();if(renderer){renderer.draw({x:X,y:Y,scale:.34,alpha:g&&g.stealth>0?.4:.98});return}drawnFrame=-1};
+  const legacyDrawPlayer=globalThis.eval('drawPlayer');
+  window.__shadowCharacterDraw=function(X,Y){if(drawnFrame===visualFrame)return;drawnFrame=visualFrame;const g=game();if(renderer&&renderer.draw({x:X,y:Y,scale:.34,alpha:g&&g.stealth>0?.4:.98}))return;drawnFrame=-1;if(typeof legacyDrawPlayer==='function')legacyDrawPlayer(X,Y)};
   globalThis.eval('drawPlayer=window.__shadowCharacterDraw');
   function installUpdateHook(){if(updateHookInstalled)return true;let legacyUpdate;try{legacyUpdate=globalThis.eval('update')}catch(_){return false}updateHookInstalled=true;window.__shadowCharacterUpdate=function(dt){if(typeof legacyUpdate==='function')legacyUpdate(dt);sync();if(renderer)renderer.update(dt*1000)};globalThis.eval('update=window.__shadowCharacterUpdate');return true}
   queueMicrotask(()=>{if(!installUpdateHook())setTimeout(installUpdateHook,0)});
-  fetch(MANIFEST_URL,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('manifest HTTP '+r.status);return r.json()}).then(m=>{manifest=m;sync()}).catch(e=>console.warn('[CharacterRenderer] manifest load failed:',e));
+  loadManifest();
 })();

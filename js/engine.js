@@ -1,6 +1,6 @@
 'use strict';
 /* ═══ SHADOW ENGINE · ядро: утилиты, звук, ввод, камера, свет, физика ═══ */
-const VER='0.12.3';
+const VER='0.12.7';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;

@@ -262,7 +262,7 @@ function syncSettings(){
 $('volR').oninput=e=>{SET.vol=e.target.value/100;if(AU.gain)AU.gain.gain.value=SET.muted?0:SET.vol;$('volV').textContent=e.target.value+'%'};
 $('chkShake').onchange=e=>SET.shake=e.target.checked;
 $('chkFilter').onchange=e=>{SET.filter=e.target.checked;cvs.classList.toggle('fx',SET.filter)};
-$('selSprites').onchange=e=>{SET.sprites=e.target.value;saveGame();toast('Набор спрайтов: '+(SET.sprites==='gen'?'ИИ-генерация':'ваши')+' — перезагрузка…','#c4b5fd');setTimeout(()=>location.reload(),900)};
+$('selSprites').onchange=e=>{SET.sprites=e.target.value;saveGame();toast('Набор спрайтов: '+(SET.sprites==='gen'?'ИИ-генерация':'ваши (Production Kit)'),'#c4b5fd');SFX.ui()}; /* v0.12.7: на лету */
 $('selPart').onchange=e=>SET.parts=+e.target.value;
 $('selJoy').onchange=e=>{SET.joy=e.target.value;applyJoySide()};
 $('btnName').onclick=()=>{
