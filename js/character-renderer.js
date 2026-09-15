@@ -8,6 +8,9 @@ class CharacterRenderer {
     this.ctx=ctx; this.manifest=manifest; this.characterId=characterId; this.data=manifest.characters[characterId];
     if(!this.data)throw new Error(`Unknown character: ${characterId}`);
     this.frameW=manifest.canvas.logicalWidth; this.frameH=manifest.canvas.logicalHeight;
+    this.columns=Math.max(1,manifest.spritePacking?.columnsPerFrame||3);
+    this.characterColumn=Math.min(this.columns-1,Math.max(0,manifest.spritePacking?.characterColumn??1));
+    this.sourceW=this.frameW/this.columns;
     this.state='idle'; this.frame=0; this.elapsed=0; this.done=false; this.flipX=false;
     this.scale=options.scale??.42; this.x=options.x??0; this.y=options.y??0; this.anchorY=options.anchorY??1; this.shadow=options.shadow??true; this.images=Object.create(null); this.loading=this.load();
   }
@@ -16,7 +19,7 @@ class CharacterRenderer {
   setAnimation(state,restart=false){if(!this.manifest.animations[state])throw new Error(`Unknown animation: ${state}`);if(state!==this.state||restart){this.state=state;this.frame=0;this.elapsed=0;this.done=false}}
   playOnce(state){this.setAnimation(state,true)}
   update(dtMs){const anim=this.manifest.animations[this.state];if(!anim||(this.done&&!anim.loop))return;this.elapsed+=Math.max(0,dtMs);const ft=1000/anim.fps;while(this.elapsed+1e-7>=ft){this.elapsed-=ft;this.frame++;if(this.frame>=anim.frames){if(anim.loop)this.frame=0;else{this.frame=anim.frames-1;this.done=true;this.elapsed=0;break}}}}
-  draw(options={}){const img=this.images[this.state];if(!img)return false;const c=this.ctx,s=options.scale??this.scale,x=options.x??this.x,y=options.y??this.y,a=options.alpha??1,dw=this.frameW*s,dh=this.frameH*s,dx=x-dw/2,dy=y-dh*this.anchorY,sx=this.frame*this.frameW;c.save();c.globalAlpha=a;c.imageSmoothingEnabled=false;if(this.shadow){c.save();c.globalAlpha=.22*a;c.fillStyle='#000';c.beginPath();c.ellipse(x,y+5*s,28*s,7*s,0,0,Math.PI*2);c.fill();c.restore()}c.translate(dx+(this.flipX?dw:0),dy);if(this.flipX)c.scale(-1,1);c.drawImage(img,sx,0,this.frameW,this.frameH,0,0,dw,dh);c.restore();return true}
+  draw(options={}){const img=this.images[this.state];if(!img)return false;const c=this.ctx,s=options.scale??this.scale,x=options.x??this.x,y=options.y??this.y,a=options.alpha??1,dw=this.sourceW*s,dh=this.frameH*s,dx=x-dw/2,dy=y-dh*this.anchorY,sx=this.frame*this.frameW+this.characterColumn*this.sourceW;c.save();c.globalAlpha=a;c.imageSmoothingEnabled=false;if(this.shadow){c.save();c.globalAlpha=.22*a;c.fillStyle='#000';c.beginPath();c.ellipse(x,y+5*s,18*s,5*s,0,0,Math.PI*2);c.fill();c.restore()}c.translate(dx+(this.flipX?dw:0),dy);if(this.flipX)c.scale(-1,1);c.drawImage(img,sx,0,this.sourceW,this.frameH,0,0,dw,dh);c.restore();return true}
 }
 window.CharacterRenderer=CharacterRenderer;
 (function(){
