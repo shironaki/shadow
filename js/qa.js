@@ -1,6 +1,6 @@
 'use strict';
 /* SHADOW ASCENSION — browser QA harness. Hidden by default; F9 / ?qa=1. */
-import('./phaser-apex.js?v=0.2.0').catch(e=>console.warn('[PhaserApex] load failed:',e));
+import('./phaser-apex.js?v=0.3.0').catch(e=>console.warn('[PhaserApex] load failed:',e));
 (function(){
   const get=n=>{try{return globalThis.eval(n)}catch(_){return undefined}};
   const finite=n=>Number.isFinite(n);
@@ -15,7 +15,7 @@ import('./phaser-apex.js?v=0.2.0').catch(e=>console.warn('[PhaserApex] load fail
     return count===open;
   }
   function run(){
-    const G=get('G'),M=get('M'),ctx=get('ctx'),canvas=get('cvs');
+    const G=get('G'),M=get('M'),ctx=get('ctx'),canvas=get('cvs'),A=window.__shadowPhaserApex;
     const tests=[];const ok=(name,pass,detail='')=>tests.push({name,pass:!!pass,detail});
     ok('Canvas',!!ctx&&!!canvas,ctx?`${canvas.width}×${canvas.height}`:'нет');
     ok('Карта',!!M&&!!M.grid&&M.grid.length===M.W*M.H,M?`${M.W}×${M.H}`:'нет');
@@ -25,8 +25,9 @@ import('./phaser-apex.js?v=0.2.0').catch(e=>console.warn('[PhaserApex] load fail
     ok('Камера',!!G&&!!G.cam&&finite(G.cam.x)&&finite(G.cam.y),'позиция конечная');
     ok('Бой',!!G&&Array.isArray(G.enemies)&&Array.isArray(G.projs)&&Array.isArray(G.loots),G?`враги ${G.enemies.length} · снаряды ${G.projs.length}`:'нет');
     ok('Сохранение',typeof localStorage!=='undefined','localStorage доступен');
-    ok('Phaser',!!window.__shadowPhaserApex&&!!window.__shadowPhaserApex.game,'Phaser 3.90 presentation stage');
-    ok('Chibi legacy adapter',typeof window.__shadowChibiDraw==='function','legacy renderer remains isolated behind Phaser');
+    ok('Phaser Apex',!!A&&!!A.game,A?`${A.engine} · ${A.version} · ${A.renderer}`:'не запущен');
+    ok('Phaser host',!!document.getElementById('phaser-apex'),'presentation host создан');
+    ok('Legacy renderer isolation',typeof window.__shadowChibiDraw==='function'||typeof window.__shadowChibiUpdate==='function','старый renderer не управляет Phaser canvas');
     ok('Collision state',!!M&&Array.isArray(M.obst),'grid/obstacle state available to gameplay');
     ok('FPS',!G||!G.fps||G.fps>=24,G&&G.fps?Math.round(G.fps)+' FPS':'старт');
     const passed=tests.filter(x=>x.pass).length;last={time:new Date().toISOString(),passed,total:tests.length,tests};return last;
