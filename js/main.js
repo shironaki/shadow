@@ -1,7 +1,7 @@
 'use strict';
 import('./phaser-apex.js?v=0.4.0').catch(e=>console.warn('[PhaserApex] load failed:',e));
 import('./phaser-apex-ui.js?v=0.1.0').catch(e=>console.warn('[PhaserApexHUD] load failed:',e));
-import('./phaser-apex-plus.js?v=0.5.0').catch(e=>console.warn('[PhaserApexWorld] load failed:',e));
+import('./phaser-apex-plus.js?v=0.6.0').catch(e=>console.warn('[PhaserApexWorld] load failed:',e));
 import('./phaser-combat-fx.js?v=0.1.0').catch(e=>console.warn('[PhaserApexCombat] load failed:',e));
 import('./phaser-arise.js?v=0.1.0').catch(e=>console.warn('[PhaserApexArise] load failed:',e));
 import('./qa.js?v=0.15.0').catch(e=>console.warn('[ShadowQA] load failed:',e));
