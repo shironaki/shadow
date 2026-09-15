@@ -3,6 +3,7 @@ import('./phaser-apex.js?v=0.4.0').catch(e=>console.warn('[PhaserApex] load fail
 import('./phaser-apex-ui.js?v=0.1.0').catch(e=>console.warn('[PhaserApexHUD] load failed:',e));
 import('./phaser-apex-plus.js?v=0.5.0').catch(e=>console.warn('[PhaserApexWorld] load failed:',e));
 import('./phaser-combat-fx.js?v=0.1.0').catch(e=>console.warn('[PhaserApexCombat] load failed:',e));
+import('./phaser-arise.js?v=0.1.0').catch(e=>console.warn('[PhaserApexArise] load failed:',e));
 import('./qa.js?v=0.15.0').catch(e=>console.warn('[ShadowQA] load failed:',e));
 const SKEY='shadow_ascension_v4';
 function saveGame(){if(!G.player)return;try{localStorage.setItem(SKEY,JSON.stringify({v:7,seed:G.seed,questSeq:G.questSeq,tutArise:G.tutArise,counters:G.counters,riseBonus:G.riseBonus,daily:G.daily,army:G.army,stance:G.stance||'assault',p:{name:G.player.name||'',level:G.player.level,exp:G.player.exp,gold:G.player.gold,crystals:G.player.crystals,essence:G.player.essence,fury:G.player.fury,hp:G.player.hp,mp:G.player.mp,skillLv:G.player.skillLv,stats:G.player.stats,pts:G.player.pts,sex:G.player.sex||'m',cls:G.player.cls||'shade'},inv:inv,eq:{weapon:equipped.weapon?equipped.weapon.uid:0,armor:equipped.armor?equipped.armor.uid:0,ring:equipped.ring?equipped.ring.uid:0,relic:equipped.relic?equipped.relic.uid:0},shadows:G.shadows.map(s=>({type:s.type,lvl:s.lvl,hp:Math.round(s.hp),grade:s.grade||0,bench:!!s.bench})),set:SET}))}catch(e){}}
