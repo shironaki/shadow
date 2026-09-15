@@ -1,3 +1,5 @@
+import './visual-upgrade.js?v=0.13.0';
+import './qa.js?v=0.13.0';
 /**
  * Shadow Ascension - Production Kit CharacterRenderer.
  * Rendering only: movement, combat and state ownership stay in gameplay code.
